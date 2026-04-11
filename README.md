@@ -1,43 +1,64 @@
 # Quant Research Lab
 
-Public-facing research-platform showcase inspired by the systems work I led at Algory Capital.
+Public-facing research-platform showcase inspired by the systems work I led at
+Algory Capital.
 
 ## Project framing
 
-This repo is an original demo of a leakage-aware quant research workflow: ingest data, build factors, run walk-forward backtests, inspect diagnostics, and produce clear tearsheets.
+This repo is an original demo of a leakage-aware quant research workflow:
+ingest data, build factors, run walk-forward backtests, inspect diagnostics,
+and present the results in a lightweight research dashboard.
 
 ## What it demonstrates
 
-- factor pipeline structure
+- factor generation over a synthetic asset universe
 - walk-forward validation discipline
-- exposure-aware portfolio construction scaffolding
-- reproducible experiment logging
+- ranking and portfolio spread construction
 - dashboard-first research ergonomics
+- clear separation between research logic and presentation
 
 ## Stack
 
 - Python
-- pandas / NumPy
+- pandas and NumPy
 - Streamlit
-- PostgreSQL-style storage patterns
-- GitHub Actions-style reproducibility mindset
 
-## Goals
+## Research flow
 
-- make research infrastructure visible as a real engineering discipline
-- show how I think about leakage, point-in-time correctness, and research velocity
-- give recruiters something more concrete than a bullet point
+```mermaid
+flowchart LR
+    A["Synthetic price panel"] --> B["Factor score computation"]
+    B --> C["Cross-sectional ranking"]
+    C --> D["Walk-forward backtest"]
+    D --> E["Spread return analysis"]
+    E --> F["Streamlit dashboard"]
+```
 
-## Planned repository structure
+## Repository map
 
-- `app.py` for a simple research dashboard
-- `src/factors.py`
-- `src/backtest.py`
-- `src/portfolio.py`
-- `requirements.txt`
+- `src/factors.py` builds the synthetic data universe and composite factors
+- `src/backtest.py` runs the walk-forward backtest
+- `app.py` renders the Streamlit dashboard
+- `tests/test_backtest.py` verifies the factor and backtest pipeline
+- `examples/sample_backtest.csv` shows representative spread output
+
+## Quickstart
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+streamlit run app.py
+```
 
 ## Resume-aligned highlights
 
-- built the research stack for a 30+ member investment organization
-- increased strategy research throughput by 6.8x
-- reduced new-analyst ramp from about 6 weeks to 8 days
+- shows the research-platform mentality behind the resume bullets
+- foregrounds leakage awareness and walk-forward structure
+- turns a leadership bullet into something inspectable and technical
+
+## Next upgrades
+
+- add sector exposures and residualization
+- introduce tearsheet generation
+- support alternative factor families and experiment tracking
