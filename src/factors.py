@@ -4,33 +4,120 @@ import numpy as np
 import pandas as pd
 
 
-def build_synthetic_panel(periods: int = 180, assets: int = 24, seed: int = 7) -> tuple[pd.DataFrame, pd.DataFrame]:
-    rng = np.random.default_rng(seed)
-    tickers = [f"Asset_{idx:02d}" for idx in range(assets)]
-    dates = pd.date_range("2024-01-01", periods=periods, freq="B")
+def _zscore(series: pd.Series) -> pd.Series:
+    std = float(series.std(ddof=0))
+    if std == 0.0 or np.isnan(std):
+        return pd.Series(0.0, index=series.index)
+    return (series - float(series.mean())) / std
 
-    returns = rng.normal(0.0006, 0.015, size=(periods, assets))
-    prices = 100 * (1 + returns).cumprod(axis=0)
-    fundamentals = pd.DataFrame(
-        {
-            "ticker": tickers,
-            "book_to_price": rng.normal(0.7, 0.15, size=assets),
-            "quality": rng.normal(0.0, 1.0, size=assets),
-        }
+
+def _winsorize(series: pd.Series, lower: float = 0.05, upper: float = 0.95) -> pd.Series:
+    low = float(series.quantile(lower))
+    high = float(series.quantile(upper))
+    return series.clip(low, high)
+
+
+def _sector_neutralize(frame: pd.DataFrame, column: str) -> pd.Series:
+    return frame[column] - frame.groupby(["date", "sector"])[column].transform("mean")
+
+
+def compute_factor_signals(panel: pd.DataFrame, macro: pd.DataFrame) -> pd.DataFrame:
+    working = panel.sort_values(["ticker", "date"]).copy()
+    working["momentum_21"] = working.groupby("ticker")["price"].pct_change(21)
+    working["momentum_63"] = working.groupby("ticker")["price"].pct_change(63)
+    working["reversal_5"] = -working.groupby("ticker")["price"].pct_change(5)
+    working["volatility_21"] = working.groupby("ticker")["return"].transform(
+        lambda values: values.rolling(21).std()
+    )
+    working["volume_21"] = working.groupby("ticker")["dollar_volume"].transform(
+        lambda values: values.rolling(21).mean()
+    )
+    working["price_vs_63d_mean"] = working.groupby("ticker")["price"].transform(
+        lambda values: values / values.rolling(63).mean() - 1.0
     )
 
-    price_frame = pd.DataFrame(prices, index=dates, columns=tickers)
-    return price_frame, fundamentals
+    macro_frame = macro.copy()
+    macro_frame["macro_regime_z"] = _zscore(macro_frame["macro_regime"])
+    merged = working.merge(
+        macro_frame[["date", "growth", "stress", "macro_regime_z"]],
+        on="date",
+        how="left",
+    )
 
+    cross_section = [
+        "book_to_price",
+        "quality",
+        "profitability",
+        "momentum_21",
+        "momentum_63",
+        "reversal_5",
+        "volatility_21",
+        "liquidity",
+        "price_vs_63d_mean",
+        "beta",
+    ]
+    for column in cross_section:
+        cleaned = merged.groupby("date")[column].transform(_winsorize)
+        merged[f"{column}_z"] = cleaned.groupby(merged["date"]).transform(_zscore)
 
-def compute_factor_scores(price_frame: pd.DataFrame, fundamentals: pd.DataFrame) -> pd.DataFrame:
-    momentum = price_frame.pct_change(20).iloc[-1]
-    volatility = price_frame.pct_change().rolling(20).std().iloc[-1]
+    merged["stability_z"] = -merged["volatility_21_z"]
+    merged["size_z"] = -merged.groupby("date")["size"].transform(_zscore)
+    merged["quality_value_raw"] = (
+        0.35 * merged["book_to_price_z"]
+        + 0.30 * merged["quality_z"]
+        + 0.20 * merged["profitability_z"]
+        + 0.15 * merged["size_z"]
+    )
+    merged["momentum_regime_raw"] = (
+        0.45 * merged["momentum_63_z"]
+        + 0.20 * merged["momentum_21_z"]
+        + 0.10 * merged["price_vs_63d_mean_z"]
+        + 0.25 * merged["macro_regime_z"]
+    )
+    merged["defensive_raw"] = (
+        0.40 * merged["quality_z"]
+        + 0.35 * merged["stability_z"]
+        + 0.15 * merged["profitability_z"]
+        - 0.10 * merged["beta_z"]
+    )
 
-    scores = fundamentals.set_index("ticker").copy()
-    scores["momentum"] = momentum
-    scores["stability"] = -volatility
+    merged["quality_value_score"] = _sector_neutralize(merged, "quality_value_raw")
+    merged["momentum_regime_score"] = _sector_neutralize(merged, "momentum_regime_raw")
+    merged["defensive_score"] = _sector_neutralize(merged, "defensive_raw")
+    merged["composite_score"] = (
+        0.45 * merged["quality_value_score"]
+        + 0.35 * merged["momentum_regime_score"]
+        + 0.20 * merged["defensive_score"]
+    )
 
-    z_scores = (scores - scores.mean()) / scores.std(ddof=0)
-    z_scores["composite_score"] = z_scores[["book_to_price", "quality", "momentum", "stability"]].mean(axis=1)
-    return z_scores.sort_values("composite_score", ascending=False)
+    signal_columns = [
+        "date",
+        "ticker",
+        "sector",
+        "return",
+        "price",
+        "market_cap",
+        "book_to_price",
+        "quality",
+        "profitability",
+        "beta",
+        "size",
+        "liquidity",
+        "momentum_21",
+        "momentum_63",
+        "reversal_5",
+        "volatility_21",
+        "quality_value_score",
+        "momentum_regime_score",
+        "defensive_score",
+        "composite_score",
+        "book_to_price_z",
+        "quality_z",
+        "profitability_z",
+        "momentum_63_z",
+        "stability_z",
+        "beta_z",
+        "macro_regime_z",
+    ]
+    signal_frame = merged[signal_columns].dropna().reset_index(drop=True)
+    return signal_frame
