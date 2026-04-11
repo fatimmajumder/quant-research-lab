@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: quant-research-lab
+    env: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: APP_DATA_DIR
+        value: /opt/render/project/src/app_data
+      - key: APP_RUNTIME
+        value: inline

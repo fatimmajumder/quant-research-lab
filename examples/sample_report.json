@@ -1,0 +1,50 @@
+{
+  "quality_value_sector_neutral": {
+    "scenario_id": "quality_value_sector_neutral",
+    "scenario_name": "Quality + Value Sector Neutral",
+    "annualized_return": 0.05719181690014197,
+    "annualized_volatility": 0.06786974037597446,
+    "sharpe_ratio": 0.8426703356064049,
+    "max_drawdown": -0.05170076419418013,
+    "hit_rate": 0.5714285714285714,
+    "alpha_annualized": 0.11148166827446437,
+    "alpha_information_ratio": 1.0452416864849554,
+    "average_turnover": 0.07142857142857142,
+    "average_information_coefficient": 0.05878202344767693,
+    "period_count": 14,
+    "ending_equity": 1.067036867202361,
+    "benchmark_ending_equity": 0.9346315637492016
+  },
+  "momentum_regime_overlay": {
+    "scenario_id": "momentum_regime_overlay",
+    "scenario_name": "Momentum with Regime Overlay",
+    "annualized_return": 0.026283369765385922,
+    "annualized_volatility": 0.051389080004045254,
+    "sharpe_ratio": 0.5114582662954259,
+    "max_drawdown": -0.040512597273553386,
+    "hit_rate": 0.6428571428571429,
+    "alpha_annualized": 0.08073780267760791,
+    "alpha_information_ratio": 0.6870836772764644,
+    "average_turnover": 0.4894520470350262,
+    "average_information_coefficient": 0.03497320851222135,
+    "period_count": 14,
+    "ending_equity": 1.0307306094840532,
+    "benchmark_ending_equity": 0.9346315637492016
+  },
+  "defensive_quality_low_vol": {
+    "scenario_id": "defensive_quality_low_vol",
+    "scenario_name": "Defensive Quality / Low Vol",
+    "annualized_return": 0.05681283015321248,
+    "annualized_volatility": 0.05370414915871541,
+    "sharpe_ratio": 1.0578853038954175,
+    "max_drawdown": -0.03247653361982494,
+    "hit_rate": 0.6428571428571429,
+    "alpha_annualized": 0.11026304944957513,
+    "alpha_information_ratio": 1.0391357439083764,
+    "average_turnover": 0.3971586029699879,
+    "average_information_coefficient": 0.09015414676508902,
+    "period_count": 14,
+    "ending_equity": 1.0665906118178214,
+    "benchmark_ending_equity": 0.9346315637492016
+  }
+}

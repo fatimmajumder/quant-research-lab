@@ -1,4 +1,5 @@
-__pycache__/
-*.pyc
 .venv/
-.streamlit/
+__pycache__/
+.pytest_cache/
+app_data/
+data/public/

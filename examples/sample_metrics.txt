@@ -1,0 +1,3 @@
+Quality + Value Sector Neutral: return=0.0572, sharpe=0.843, drawdown=-0.0517, alpha=0.1115
+Momentum with Regime Overlay: return=0.0263, sharpe=0.511, drawdown=-0.0405, alpha=0.0807
+Defensive Quality / Low Vol: return=0.0568, sharpe=1.058, drawdown=-0.0325, alpha=0.1103
