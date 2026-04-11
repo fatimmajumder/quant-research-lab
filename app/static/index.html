@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quant Research Lab</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Quant Research Lab</p>
+          <h1>Leakage-aware factor research, portfolio construction, and tearsheets in one browser surface.</h1>
+          <p class="lede">
+            This public-facing demo simulates the kind of research platform a quant team uses to go from raw data
+            to a documented investment view. Launch scenarios, inspect artifacts, and compare runs without leaving
+            the dashboard.
+          </p>
+        </div>
+        <div class="hero-panel" id="system-card"></div>
+      </section>
+
+      <section class="grid two">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Run Composer</h2>
+            <span id="workspace-count"></span>
+          </div>
+          <form id="run-form" class="stack">
+            <label>
+              Scenario
+              <select id="scenario-select" required></select>
+            </label>
+            <label>
+              Workspace
+              <select id="workspace-select"></select>
+            </label>
+            <label>
+              Dataset
+              <select id="dataset-select"></select>
+            </label>
+            <label>
+              Label
+              <input id="label-input" placeholder="Quarterly quality/value refresh" />
+            </label>
+            <label>
+              Seed
+              <input id="seed-input" type="number" value="21" min="1" max="9999" />
+            </label>
+            <button type="submit">Launch Research Run</button>
+          </form>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Create Workspace</h2>
+            <span>Organize strategy sleeves or PM pods</span>
+          </div>
+          <form id="workspace-form" class="stack">
+            <label>
+              Name
+              <input id="workspace-name" required placeholder="Macro Overlay Pod" />
+            </label>
+            <label>
+              Description
+              <textarea id="workspace-description" required placeholder="Research lane for regime-sensitive factor ideas."></textarea>
+            </label>
+            <button type="submit">Add Workspace</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="grid two">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Scenarios</h2>
+            <span id="scenario-count"></span>
+          </div>
+          <div id="scenario-list" class="cards"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Public Data + Research Feeds</h2>
+            <span>Verified public sources</span>
+          </div>
+          <div id="resource-list" class="cards compact"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Recent Runs</h2>
+          <button id="refresh-button" class="ghost">Refresh</button>
+        </div>
+        <div id="run-list" class="cards"></div>
+      </section>
+
+      <section class="grid two">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Run Detail</h2>
+            <span id="detail-label">Select a run</span>
+          </div>
+          <div id="run-detail" class="detail-empty">No run selected yet.</div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Artifact Preview</h2>
+            <span>Tearsheet outputs</span>
+          </div>
+          <div id="artifact-preview" class="artifact-preview">Launch a run to see generated charts and files.</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Compare Runs</h2>
+          <button id="compare-button">Compare Selected Runs</button>
+        </div>
+        <div id="comparison-table" class="table-wrap"></div>
+      </section>
+    </main>
+
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>
