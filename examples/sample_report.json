@@ -1,50 +1,374 @@
 {
-  "quality_value_sector_neutral": {
-    "scenario_id": "quality_value_sector_neutral",
-    "scenario_name": "Quality + Value Sector Neutral",
-    "annualized_return": 0.05719181690014197,
-    "annualized_volatility": 0.06786974037597446,
-    "sharpe_ratio": 0.8426703356064049,
-    "max_drawdown": -0.05170076419418013,
+  "summary": {
+    "scenario_id": "earnings_revision_quality",
+    "scenario_name": "Earnings Revision + Quality",
+    "annualized_return": 0.06264645638386201,
+    "annualized_volatility": 0.05309885312363508,
+    "sharpe_ratio": 1.1798080880955442,
+    "max_drawdown": -0.027383613942484897,
     "hit_rate": 0.5714285714285714,
-    "alpha_annualized": 0.11148166827446437,
-    "alpha_information_ratio": 1.0452416864849554,
-    "average_turnover": 0.07142857142857142,
-    "average_information_coefficient": 0.05878202344767693,
+    "alpha_annualized": 0.1157675710622087,
+    "alpha_information_ratio": 1.1130218263641327,
+    "average_turnover": 0.33668145402304867,
+    "average_information_coefficient": 0.09027045468643384,
     "period_count": 14,
-    "ending_equity": 1.067036867202361,
-    "benchmark_ending_equity": 0.9346315637492016
+    "ending_equity": 1.0734626330667274,
+    "benchmark_ending_equity": 0.9346315637492016,
+    "rebalance_count": 14,
+    "average_transaction_cost": 0.0004713540356322681,
+    "average_gross_exposure": 1.0,
+    "average_net_exposure": 8.549708560171407e-18,
+    "median_capacity_proxy": 34619288.3074511,
+    "max_name_weight": 0.06376686929690238
   },
-  "momentum_regime_overlay": {
-    "scenario_id": "momentum_regime_overlay",
-    "scenario_name": "Momentum with Regime Overlay",
-    "annualized_return": 0.026283369765385922,
-    "annualized_volatility": 0.051389080004045254,
-    "sharpe_ratio": 0.5114582662954259,
-    "max_drawdown": -0.040512597273553386,
-    "hit_rate": 0.6428571428571429,
-    "alpha_annualized": 0.08073780267760791,
-    "alpha_information_ratio": 0.6870836772764644,
-    "average_turnover": 0.4894520470350262,
-    "average_information_coefficient": 0.03497320851222135,
-    "period_count": 14,
-    "ending_equity": 1.0307306094840532,
-    "benchmark_ending_equity": 0.9346315637492016
+  "validation_report": {
+    "overall_status": "warn",
+    "gates": [
+      {
+        "name": "turnover_budget",
+        "actual": 0.336681,
+        "threshold": 0.65,
+        "comparator": "le",
+        "status": "pass",
+        "detail": "Average turnover should stay in a range that remains realistic after costs."
+      },
+      {
+        "name": "drawdown_budget",
+        "actual": 0.027384,
+        "threshold": 0.25,
+        "comparator": "le",
+        "status": "pass",
+        "detail": "The sleeve should avoid deep drawdowns that break PM confidence."
+      },
+      {
+        "name": "beta_neutrality",
+        "actual": 0.357594,
+        "threshold": 0.35,
+        "comparator": "le",
+        "status": "warn",
+        "detail": "Average beta exposure should stay contained for market-neutral research sleeves."
+      },
+      {
+        "name": "sector_tilt_cap",
+        "actual": 0.050803,
+        "threshold": 0.22,
+        "comparator": "le",
+        "status": "pass",
+        "detail": "Latest sector tilts should remain below a concentration threshold."
+      },
+      {
+        "name": "signal_quality",
+        "actual": 0.09027,
+        "threshold": 0.015,
+        "comparator": "ge",
+        "status": "pass",
+        "detail": "Average information coefficient should stay positive and material."
+      },
+      {
+        "name": "hit_rate_floor",
+        "actual": 0.571429,
+        "threshold": 0.48,
+        "comparator": "ge",
+        "status": "pass",
+        "detail": "Hit rate should remain above a naive coin-flip baseline after costs."
+      }
+    ],
+    "notes": [
+      "Validation runs are tracked alongside artifacts so analysts can explain why a sleeve is promotable.",
+      "These gates are intentionally simple public-facing proxies for a larger internal risk and leakage suite."
+    ],
+    "period_count": 14
   },
-  "defensive_quality_low_vol": {
-    "scenario_id": "defensive_quality_low_vol",
-    "scenario_name": "Defensive Quality / Low Vol",
-    "annualized_return": 0.05681283015321248,
-    "annualized_volatility": 0.05370414915871541,
-    "sharpe_ratio": 1.0578853038954175,
-    "max_drawdown": -0.03247653361982494,
-    "hit_rate": 0.6428571428571429,
-    "alpha_annualized": 0.11026304944957513,
-    "alpha_information_ratio": 1.0391357439083764,
-    "average_turnover": 0.3971586029699879,
-    "average_information_coefficient": 0.09015414676508902,
-    "period_count": 14,
-    "ending_equity": 1.0665906118178214,
-    "benchmark_ending_equity": 0.9346315637492016
-  }
+  "attribution": {
+    "factor_contributions": [
+      {
+        "factor": "quality",
+        "contribution": 0.13153766518455728,
+        "mean_exposure": 0.8994524397011449
+      },
+      {
+        "factor": "momentum",
+        "contribution": 0.09120971652983616,
+        "mean_exposure": 0.5891122085320895
+      },
+      {
+        "factor": "beta",
+        "contribution": -0.08216605029119045,
+        "mean_exposure": -0.35759414820265883
+      },
+      {
+        "factor": "stability",
+        "contribution": -0.029882861318752292,
+        "mean_exposure": -0.07947785070068585
+      },
+      {
+        "factor": "value",
+        "contribution": 0.015170743021776109,
+        "mean_exposure": 0.003543088284312807
+      }
+    ],
+    "sector_contributions": [
+      {
+        "sector": "Technology",
+        "contribution": 0.034526666852003084,
+        "average_weight": 0.004820475554665407,
+        "positions": 65
+      },
+      {
+        "sector": "Energy",
+        "contribution": 0.01842191762405061,
+        "average_weight": 0.0010159541657376444,
+        "positions": 68
+      },
+      {
+        "sector": "Materials",
+        "contribution": 0.01304702783077811,
+        "average_weight": -0.0017529222637255998,
+        "positions": 67
+      },
+      {
+        "sector": "Industrials",
+        "contribution": 0.010528999499932294,
+        "average_weight": -0.00038887701335275286,
+        "positions": 54
+      },
+      {
+        "sector": "Consumer",
+        "contribution": 0.005881061034346073,
+        "average_weight": -0.002417252761936296,
+        "positions": 78
+      },
+      {
+        "sector": "Financials",
+        "contribution": 0.0019022338971147676,
+        "average_weight": -0.0024470278047760796,
+        "positions": 60
+      },
+      {
+        "sector": "Utilities",
+        "contribution": -4.388645153044946e-06,
+        "average_weight": 0.002484816940578522,
+        "positions": 73
+      },
+      {
+        "sector": "Healthcare",
+        "contribution": -0.00499186408647211,
+        "average_weight": -0.0013234543658438753,
+        "positions": 68
+      }
+    ],
+    "diagnostics": {
+      "mean_information_coefficient": 0.09027045468643384,
+      "mean_turnover": 0.33668145402304867,
+      "best_alpha_period": 0.06326269930355412,
+      "worst_alpha_period": -0.052742366618712816
+    }
+  },
+  "lineage": {
+    "config_fingerprint": "ab6d6e7d4b60",
+    "config": {
+      "scenario_id": "earnings_revision_quality",
+      "score_column": "earnings_revision_score",
+      "holding_period": 21,
+      "top_n": 10,
+      "cost_bps": 14.0,
+      "portfolio_style": "risk_scaled",
+      "sector_neutral": true,
+      "seed": 21,
+      "dataset_id": "synthetic_us_equities"
+    },
+    "dataset_snapshot": {
+      "dataset_id": "synthetic_us_equities",
+      "dataset_version": "synthetic_us_equities-snapshot-v1",
+      "calendar": "NYSE business-day synthetic calendar",
+      "point_in_time_safe": true
+    },
+    "factor_library": {
+      "factor_library_version": "factor-lib-v3",
+      "macro_overlay_version": "macro-overlay-v2",
+      "rebalance_schedule": "21B",
+      "signal_family": "earnings_revision_score"
+    },
+    "execution_model": {
+      "transaction_cost_model": "turnover_linear_bps",
+      "portfolio_constructor": "risk_scaled",
+      "benchmark": "equal_weight_universe_mean"
+    },
+    "validation_contract": [
+      "No future returns available at rebalance time",
+      "Factor scores winsorized and z-scored cross-sectionally",
+      "Turnover, drawdown, beta, and sector-tilt gates recorded per run",
+      "Artifacts and summary metrics persisted for replay and audit"
+    ],
+    "artifacts_version": "tearsheet-v2"
+  },
+  "platform_summary": {
+    "research_readiness": 77.23,
+    "execution_mode": "watchlist_iteration",
+    "tracker": {
+      "lineage_fingerprint": "ab6d6e7d4b60",
+      "dataset_version": "synthetic_us_equities-snapshot-v1",
+      "artifacts_version": "tearsheet-v2"
+    },
+    "component_health": [
+      {
+        "name": "point_in_time_ingestion",
+        "status": "monitor",
+        "detail": "Builds leakage-aware snapshots with dataset versioning and reproducible calendars."
+      },
+      {
+        "name": "factor_library",
+        "status": "monitor",
+        "detail": "Computes cross-sectional scores, regime overlays, and signal diagnostics."
+      },
+      {
+        "name": "portfolio_constructor",
+        "status": "monitor",
+        "detail": "Forms long-short books with sector controls, turnover smoothing, and cost modeling."
+      },
+      {
+        "name": "experiment_tracker",
+        "status": "monitor",
+        "detail": "Persists runs, artifacts, labels, workspaces, and replay lineage for auditability."
+      },
+      {
+        "name": "validation_suite",
+        "status": "monitor",
+        "detail": "Applies public-facing risk gates for drawdown, turnover, beta, and sector concentration."
+      },
+      {
+        "name": "tearsheet_service",
+        "status": "monitor",
+        "detail": "Exports charts, markdown, attribution tables, and downloadable run bundles."
+      }
+    ],
+    "operator_notes": [
+      "Dominant attribution driver: quality",
+      "Validation status: warn",
+      "Scenario periods evaluated: 14"
+    ]
+  },
+  "platform": {
+    "platform_name": "Quant Research Platform",
+    "components": [
+      {
+        "name": "point_in_time_ingestion",
+        "layer": "data",
+        "role": "Builds leakage-aware snapshots with dataset versioning and reproducible calendars.",
+        "status": "active"
+      },
+      {
+        "name": "factor_library",
+        "layer": "research",
+        "role": "Computes cross-sectional scores, regime overlays, and signal diagnostics.",
+        "status": "active"
+      },
+      {
+        "name": "portfolio_constructor",
+        "layer": "research",
+        "role": "Forms long-short books with sector controls, turnover smoothing, and cost modeling.",
+        "status": "active"
+      },
+      {
+        "name": "experiment_tracker",
+        "layer": "platform",
+        "role": "Persists runs, artifacts, labels, workspaces, and replay lineage for auditability.",
+        "status": "active"
+      },
+      {
+        "name": "validation_suite",
+        "layer": "risk",
+        "role": "Applies public-facing risk gates for drawdown, turnover, beta, and sector concentration.",
+        "status": "active"
+      },
+      {
+        "name": "tearsheet_service",
+        "layer": "product",
+        "role": "Exports charts, markdown, attribution tables, and downloadable run bundles.",
+        "status": "active"
+      }
+    ],
+    "engineering_signals": [
+      "Point-in-time research contracts and reproducible experiment lineage",
+      "Workspace-oriented experiment tracking and replayable tearsheet bundles",
+      "Exposure control, attribution, and validation gates baked into every run",
+      "CI-ready repo surface with scripts, smoke tests, and deploy-friendly app packaging"
+    ],
+    "validation_gates": [
+      "turnover_budget",
+      "drawdown_budget",
+      "beta_neutrality",
+      "sector_tilt_cap",
+      "signal_quality",
+      "hit_rate_floor"
+    ],
+    "artifact_bundle": [
+      "report.json",
+      "summary.md",
+      "research_brief.md",
+      "lineage.json",
+      "validation_report.json",
+      "platform_summary.json",
+      "factor_attribution.csv",
+      "sector_attribution.csv",
+      "equity_curve.svg",
+      "drawdown.svg",
+      "factor_exposures.svg",
+      "sector_tilts.svg",
+      "ic_trace.svg",
+      "capacity_profile.svg"
+    ]
+  },
+  "scoreboard": [
+    {
+      "scenario_id": "quality_value_sector_neutral",
+      "scenario_name": "Quality + Value Sector Neutral",
+      "annualized_return": 0.05719181690014197,
+      "sharpe_ratio": 0.8426703356064049,
+      "max_drawdown": -0.05170076419418013,
+      "research_readiness": 68.6,
+      "validation_status": "warn",
+      "fingerprint": "ab0fe139e907"
+    },
+    {
+      "scenario_id": "momentum_regime_overlay",
+      "scenario_name": "Momentum with Regime Overlay",
+      "annualized_return": 0.026283369765385922,
+      "sharpe_ratio": 0.5114582662954259,
+      "max_drawdown": -0.040512597273553386,
+      "research_readiness": 60.03,
+      "validation_status": "pass",
+      "fingerprint": "8b829679a397"
+    },
+    {
+      "scenario_id": "defensive_quality_low_vol",
+      "scenario_name": "Defensive Quality / Low Vol",
+      "annualized_return": 0.05681283015321248,
+      "sharpe_ratio": 1.0578853038954175,
+      "max_drawdown": -0.03247653361982494,
+      "research_readiness": 75.27,
+      "validation_status": "warn",
+      "fingerprint": "62897796bfa7"
+    },
+    {
+      "scenario_id": "earnings_revision_quality",
+      "scenario_name": "Earnings Revision + Quality",
+      "annualized_return": 0.06264645638386201,
+      "sharpe_ratio": 1.1798080880955442,
+      "max_drawdown": -0.027383613942484897,
+      "research_readiness": 77.23,
+      "validation_status": "warn",
+      "fingerprint": "ab6d6e7d4b60"
+    },
+    {
+      "scenario_id": "liquidity_resilience_barbell",
+      "scenario_name": "Liquidity Resilience Barbell",
+      "annualized_return": -0.006734115525173889,
+      "sharpe_ratio": -0.11001558542618822,
+      "max_drawdown": -0.0835381580605119,
+      "research_readiness": 37.78,
+      "validation_status": "warn",
+      "fingerprint": "d8bef65d86e5"
+    }
+  ]
 }

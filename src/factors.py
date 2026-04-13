@@ -80,14 +80,32 @@ def compute_factor_signals(panel: pd.DataFrame, macro: pd.DataFrame) -> pd.DataF
         + 0.15 * merged["profitability_z"]
         - 0.10 * merged["beta_z"]
     )
+    merged["earnings_revision_raw"] = (
+        0.35 * merged["quality_z"]
+        + 0.25 * merged["profitability_z"]
+        + 0.20 * merged["momentum_21_z"]
+        + 0.10 * merged["momentum_63_z"]
+        + 0.10 * merged["macro_regime_z"]
+    )
+    merged["liquidity_resilience_raw"] = (
+        0.35 * merged["quality_z"]
+        + 0.20 * merged["stability_z"]
+        + 0.20 * merged["book_to_price_z"]
+        + 0.15 * merged["liquidity_z"]
+        - 0.10 * merged["beta_z"]
+    )
 
     merged["quality_value_score"] = _sector_neutralize(merged, "quality_value_raw")
     merged["momentum_regime_score"] = _sector_neutralize(merged, "momentum_regime_raw")
     merged["defensive_score"] = _sector_neutralize(merged, "defensive_raw")
+    merged["earnings_revision_score"] = _sector_neutralize(merged, "earnings_revision_raw")
+    merged["liquidity_resilience_score"] = _sector_neutralize(merged, "liquidity_resilience_raw")
     merged["composite_score"] = (
-        0.45 * merged["quality_value_score"]
-        + 0.35 * merged["momentum_regime_score"]
+        0.30 * merged["quality_value_score"]
+        + 0.25 * merged["momentum_regime_score"]
         + 0.20 * merged["defensive_score"]
+        + 0.15 * merged["earnings_revision_score"]
+        + 0.10 * merged["liquidity_resilience_score"]
     )
 
     signal_columns = [
@@ -97,6 +115,7 @@ def compute_factor_signals(panel: pd.DataFrame, macro: pd.DataFrame) -> pd.DataF
         "return",
         "price",
         "market_cap",
+        "dollar_volume",
         "book_to_price",
         "quality",
         "profitability",
@@ -110,6 +129,8 @@ def compute_factor_signals(panel: pd.DataFrame, macro: pd.DataFrame) -> pd.DataF
         "quality_value_score",
         "momentum_regime_score",
         "defensive_score",
+        "earnings_revision_score",
+        "liquidity_resilience_score",
         "composite_score",
         "book_to_price_z",
         "quality_z",
@@ -117,6 +138,7 @@ def compute_factor_signals(panel: pd.DataFrame, macro: pd.DataFrame) -> pd.DataF
         "momentum_63_z",
         "stability_z",
         "beta_z",
+        "liquidity_z",
         "macro_regime_z",
     ]
     signal_frame = merged[signal_columns].dropna().reset_index(drop=True)

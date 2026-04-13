@@ -244,6 +244,55 @@ button.ghost {
   text-decoration: none;
 }
 
+.status-chip,
+.tag {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: rgba(15, 118, 110, 0.1);
+  border: 1px solid rgba(15, 118, 110, 0.16);
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.tag-row,
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.split-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mini-list {
+  display: grid;
+  gap: 10px;
+}
+
+.mini-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px;
+  background: #f8fafc;
+}
+
+.mini-card h4,
+.mini-card p {
+  margin-bottom: 6px;
+}
+
+.artifact-preview {
+  display: grid;
+  gap: 12px;
+}
+
 .table-wrap {
   overflow-x: auto;
 }
@@ -271,6 +320,10 @@ td {
 @media (max-width: 900px) {
   .hero,
   .grid.two {
+    grid-template-columns: 1fr;
+  }
+
+  .split-list {
     grid-template-columns: 1fr;
   }
 

@@ -67,6 +67,12 @@ def run_backtest(config: ScenarioConfig, seed: int = 21) -> dict[str, object]:
         transaction_cost = turnover * config.cost_bps / 10_000.0
         net_return = realized - transaction_cost
         ic = float(snapshot[config.score_column].rank().corr(snapshot["forward_return"].rank()))
+        weighted_snapshot = snapshot.assign(weight=snapshot["ticker"].map(weights).fillna(0.0))
+        selected = weighted_snapshot.loc[weighted_snapshot["weight"] != 0.0].copy()
+        gross_exposure = float(weights.abs().sum())
+        net_exposure = float(weights.sum())
+        capacity_proxy = float((selected["weight"].abs() * selected["dollar_volume"]).sum()) if not selected.empty else 0.0
+        max_name_weight = float(selected["weight"].abs().max()) if not selected.empty else 0.0
 
         exposure_rows.append(
             {
@@ -85,6 +91,7 @@ def run_backtest(config: ScenarioConfig, seed: int = 21) -> dict[str, object]:
                 {
                     "date": current_date,
                     "ticker": f"Sector::{sector}",
+                    "sector": sector,
                     "side": "tilt",
                     "weight": float(weight),
                     "signal": 0.0,
@@ -92,13 +99,12 @@ def run_backtest(config: ScenarioConfig, seed: int = 21) -> dict[str, object]:
                 }
             )
 
-        weighted_snapshot = snapshot.assign(weight=snapshot["ticker"].map(weights).fillna(0.0))
-        selected = weighted_snapshot.loc[weighted_snapshot["weight"] != 0.0].copy()
         for _, row in selected.sort_values("weight", ascending=False).iterrows():
             holdings_rows.append(
                 {
                     "date": current_date,
                     "ticker": row["ticker"],
+                    "sector": row["sector"],
                     "side": "long" if row["weight"] > 0 else "short",
                     "weight": float(row["weight"]),
                     "signal": float(row[config.score_column]),
@@ -115,6 +121,12 @@ def run_backtest(config: ScenarioConfig, seed: int = 21) -> dict[str, object]:
                 "alpha": net_return - benchmark_return,
                 "turnover": turnover,
                 "information_coefficient": ic,
+                "transaction_cost": transaction_cost,
+                "gross_exposure": gross_exposure,
+                "net_exposure": net_exposure,
+                "capacity_proxy": capacity_proxy,
+                "max_name_weight": max_name_weight,
+                "universe_size": int(len(snapshot)),
             }
         )
         previous_weights = weights
@@ -150,6 +162,12 @@ def run_backtest(config: ScenarioConfig, seed: int = 21) -> dict[str, object]:
         "period_count": int(len(periods)),
         "ending_equity": float(equity_curve.iloc[-1]),
         "benchmark_ending_equity": float(benchmark_curve.iloc[-1]),
+        "rebalance_count": int(len(periods)),
+        "average_transaction_cost": float(periods["transaction_cost"].mean()),
+        "average_gross_exposure": float(periods["gross_exposure"].mean()),
+        "average_net_exposure": float(periods["net_exposure"].mean()),
+        "median_capacity_proxy": float(periods["capacity_proxy"].median()),
+        "max_name_weight": float(periods["max_name_weight"].max()),
     }
 
     return {

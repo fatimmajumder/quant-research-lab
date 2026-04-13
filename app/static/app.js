@@ -3,6 +3,7 @@ const state = {
   datasets: [],
   workspaces: [],
   runs: [],
+  platform: null,
   selectedRunId: null,
 };
 
@@ -30,8 +31,10 @@ function renderSystemCard(system) {
       <div class="metric"><span>Scenarios</span><strong>${system.scenario_count}</strong></div>
       <div class="metric"><span>Datasets</span><strong>${system.dataset_count}</strong></div>
       <div class="metric"><span>Workspaces</span><strong>${system.workspace_count}</strong></div>
+      <div class="metric"><span>Platform components</span><strong>${system.platform_component_count}</strong></div>
+      <div class="metric"><span>Validation gates</span><strong>${system.validation_gate_count}</strong></div>
     </div>
-    <p class="check">Runs are persisted locally and each completed experiment generates tear-sheet artifacts for review.</p>
+    <p class="check">Runs are persisted locally and each completed experiment now carries lineage, validation, attribution, and tear-sheet artifacts for review.</p>
   `;
 }
 
@@ -86,6 +89,31 @@ function renderResources(resources) {
     .join("");
 }
 
+function renderPlatform(platform) {
+  document.getElementById("platform-panel").innerHTML = `
+    <article class="card">
+      <h3>${platform.platform_name}</h3>
+      <p>This repo now shows the platform layer behind the backtests: point-in-time data, experiment lineage, risk gates, and artifact bundles.</p>
+      <div class="chip-row">
+        ${platform.validation_gates.map((gate) => `<span class="tag">${gate}</span>`).join("")}
+      </div>
+    </article>
+    ${platform.components
+      .map(
+        (component) => `
+          <article class="card">
+            <div class="panel-head">
+              <h3>${component.name}</h3>
+              <span>${component.layer}</span>
+            </div>
+            <p>${component.role}</p>
+          </article>
+        `
+      )
+      .join("")}
+  `;
+}
+
 function renderRuns() {
   const runList = document.getElementById("run-list");
   if (!state.runs.length) {
@@ -104,6 +132,7 @@ function renderRuns() {
             <div class="metric"><span>Sharpe</span><strong>${run.summary ? formatNum(run.summary.sharpe_ratio) : "-"}</strong></div>
             <div class="metric"><span>Drawdown</span><strong>${run.summary ? formatPct(run.summary.max_drawdown) : "-"}</strong></div>
             <div class="metric"><span>Alpha</span><strong>${run.summary ? formatPct(run.summary.alpha_annualized) : "-"}</strong></div>
+            <div class="metric"><span>Readiness</span><strong>${run.platform_summary ? formatNum(run.platform_summary.research_readiness) : "-"}</strong></div>
           </div>
           <div class="run-actions">
             <button data-run-detail="${run.run_id}">Inspect</button>
@@ -117,6 +146,10 @@ function renderRuns() {
 
 function renderRunDetail(run) {
   state.selectedRunId = run.run_id;
+  const validation = run.validation_report || { overall_status: "n/a", gates: [] };
+  const platformSummary = run.platform_summary || { research_readiness: 0, execution_mode: "n/a", tracker: {}, component_health: [] };
+  const attribution = run.attribution || { factor_contributions: [], sector_contributions: [], diagnostics: {} };
+  const lineage = run.lineage || { config_fingerprint: "n/a", dataset_snapshot: { dataset_version: "n/a" } };
   document.getElementById("detail-label").textContent = run.label;
   document.getElementById("run-detail").innerHTML = `
     <div class="metric-grid">
@@ -124,17 +157,50 @@ function renderRunDetail(run) {
       <div class="metric"><span>Sharpe ratio</span><strong>${formatNum(run.summary.sharpe_ratio)}</strong></div>
       <div class="metric"><span>Max drawdown</span><strong>${formatPct(run.summary.max_drawdown)}</strong></div>
       <div class="metric"><span>Average turnover</span><strong>${formatNum(run.summary.average_turnover)}</strong></div>
+      <div class="metric"><span>Research readiness</span><strong>${formatNum(platformSummary.research_readiness)}</strong></div>
+      <div class="metric"><span>Execution mode</span><strong>${platformSummary.execution_mode}</strong></div>
     </div>
     <p><strong>Scenario:</strong> ${run.summary.scenario_name}</p>
     <p><strong>Periods:</strong> ${run.summary.period_count}</p>
     <p><strong>Dataset:</strong> ${run.dataset_id}</p>
     <p><strong>Seed:</strong> ${run.seed}</p>
+    <p><strong>Fingerprint:</strong> <code>${lineage.config_fingerprint}</code></p>
+    <p><strong>Dataset version:</strong> ${lineage.dataset_snapshot.dataset_version}</p>
+    <div class="chip-row">
+      <span class="status-chip">Validation: ${validation.overall_status}</span>
+      <span class="status-chip">Rebalances: ${run.summary.rebalance_count}</span>
+      <span class="status-chip">Capacity proxy: ${formatNum(run.summary.median_capacity_proxy)}</span>
+    </div>
+    <div class="split-list">
+      <div class="mini-list">
+        <div class="mini-card">
+          <h4>Validation gates</h4>
+          ${validation.gates
+            .map((gate) => `<p><strong>${gate.name}</strong>: ${gate.status} (${gate.actual} vs ${gate.threshold})</p>`)
+            .join("")}
+        </div>
+      </div>
+      <div class="mini-list">
+        <div class="mini-card">
+          <h4>Top factor attribution</h4>
+          ${attribution.factor_contributions
+            .slice(0, 4)
+            .map(
+              (row) =>
+                `<p><strong>${row.factor}</strong>: ${formatPct(row.contribution)} contribution, mean exposure ${formatNum(
+                  row.mean_exposure
+                )}</p>`
+            )
+            .join("")}
+        </div>
+      </div>
+    </div>
   `;
 
   const artifacts = Object.entries(run.artifacts || {});
   const preview = artifacts
     .filter(([name]) => name.endsWith(".svg"))
-    .slice(0, 2)
+    .slice(0, 3)
     .map(([name]) => `<img src="/api/artifacts/${run.run_id}/${name}" alt="${name}" />`)
     .join("");
   const artifactLinks = artifacts
@@ -162,6 +228,8 @@ function renderComparison(rows) {
           <th>Drawdown</th>
           <th>Alpha</th>
           <th>Turnover</th>
+          <th>Readiness</th>
+          <th>Fingerprint</th>
         </tr>
       </thead>
       <tbody>
@@ -177,6 +245,8 @@ function renderComparison(rows) {
           <td>${formatPct(row.max_drawdown)}</td>
           <td>${formatPct(row.alpha_annualized)}</td>
           <td>${formatNum(row.average_turnover)}</td>
+          <td>${row.research_readiness ? formatNum(row.research_readiness) : "-"}</td>
+          <td><code>${row.fingerprint || "-"}</code></td>
         </tr>
       `
     )
@@ -185,25 +255,28 @@ function renderComparison(rows) {
 }
 
 async function loadOverview() {
-  const [system, scenarios, datasets, workspaces, overview, runs] = await Promise.all([
+  const [system, scenarios, datasets, workspaces, overview, runs, platform] = await Promise.all([
     getJson("/api/system"),
     getJson("/api/scenarios"),
     getJson("/api/public-datasets"),
     getJson("/api/workspaces"),
     getJson("/api/overview"),
     getJson("/api/runs"),
+    getJson("/api/platform"),
   ]);
 
   state.scenarios = scenarios;
   state.datasets = datasets;
   state.workspaces = workspaces;
   state.runs = runs;
+  state.platform = platform;
 
   renderSystemCard(system);
   renderScenarioOptions();
   renderDatasets();
   renderWorkspaces();
   renderResources(overview.public_resources);
+  renderPlatform(platform);
   renderRuns();
 
   if (runs.length) {

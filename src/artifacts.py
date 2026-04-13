@@ -5,6 +5,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from src.platform import get_research_platform
+
 
 def _line_chart_svg(frame: pd.DataFrame, columns: list[str], title: str) -> str:
     width = 760
@@ -84,10 +86,19 @@ def write_artifacts(output_dir: str | Path, report: dict[str, object]) -> dict[s
     factor_exposures = report["factor_exposures"]
     holdings = report["holdings"]
     periods = report["period_returns"]
+    attribution = report["attribution"]
+    validation_report = report["validation_report"]
+    lineage = report["lineage"]
+    platform_summary = report["platform_summary"]
 
     report_path = path / "report.json"
     report_payload = {
         "summary": summary,
+        "lineage": lineage,
+        "validation_report": validation_report,
+        "platform_summary": platform_summary,
+        "attribution": attribution,
+        "platform": get_research_platform(),
         "period_returns": periods.to_dict(orient="records"),
         "equity_curve": equity_curve.to_dict(orient="records"),
         "factor_exposures": factor_exposures.to_dict(orient="records"),
@@ -107,6 +118,26 @@ def write_artifacts(output_dir: str | Path, report: dict[str, object]) -> dict[s
                 f"- Max drawdown: {summary['max_drawdown']:.2%}",
                 f"- Alpha annualized: {summary['alpha_annualized']:.2%}",
                 f"- Average turnover: {summary['average_turnover']:.2f}",
+                f"- Research readiness: {platform_summary['research_readiness']:.1f}",
+                f"- Validation status: {validation_report['overall_status']}",
+            ]
+        )
+    )
+    (path / "research_brief.md").write_text(
+        "\n".join(
+            [
+                f"# {summary['scenario_name']} Research Brief",
+                "",
+                f"- Execution mode: {platform_summary['execution_mode']}",
+                f"- Config fingerprint: `{lineage['config_fingerprint']}`",
+                f"- Dataset snapshot: `{lineage['dataset_snapshot']['dataset_version']}`",
+                f"- Dominant factor: {attribution['factor_contributions'][0]['factor'] if attribution['factor_contributions'] else 'n/a'}",
+                "",
+                "## Validation gates",
+                *[
+                    f"- {gate['name']}: {gate['status']} (actual={gate['actual']}, threshold={gate['threshold']})"
+                    for gate in validation_report["gates"]
+                ],
             ]
         )
     )
@@ -117,6 +148,12 @@ def write_artifacts(output_dir: str | Path, report: dict[str, object]) -> dict[s
     (path / "drawdown.svg").write_text(_line_chart_svg(equity_curve, ["drawdown"], "Drawdown Profile"))
     exposure_means = factor_exposures.drop(columns=["date"]).mean()
     (path / "factor_exposures.svg").write_text(_bar_chart_svg(exposure_means, "Average Factor Exposures"))
+    (path / "ic_trace.svg").write_text(
+        _line_chart_svg(periods, ["information_coefficient"], "Information Coefficient Trace")
+    )
+    (path / "capacity_profile.svg").write_text(
+        _line_chart_svg(periods, ["turnover", "capacity_proxy"], "Turnover vs Capacity Proxy")
+    )
 
     latest_tilts = (
         holdings.loc[holdings["ticker"].str.startswith("Sector::")]
@@ -130,15 +167,28 @@ def write_artifacts(output_dir: str | Path, report: dict[str, object]) -> dict[s
 
     holdings.loc[~holdings["ticker"].str.startswith("Sector::")].to_csv(path / "holdings.csv", index=False)
     periods.to_csv(path / "period_returns.csv", index=False)
+    pd.DataFrame(attribution["factor_contributions"]).to_csv(path / "factor_attribution.csv", index=False)
+    pd.DataFrame(attribution["sector_contributions"]).to_csv(path / "sector_attribution.csv", index=False)
+    (path / "lineage.json").write_text(json.dumps(lineage, indent=2))
+    (path / "validation_report.json").write_text(json.dumps(validation_report, indent=2))
+    (path / "platform_summary.json").write_text(json.dumps(platform_summary, indent=2))
 
     manifest = {
         "files": [
             "report.json",
             "summary.md",
+            "research_brief.md",
+            "lineage.json",
+            "validation_report.json",
+            "platform_summary.json",
+            "factor_attribution.csv",
+            "sector_attribution.csv",
             "equity_curve.svg",
             "drawdown.svg",
             "factor_exposures.svg",
             "sector_tilts.svg",
+            "ic_trace.svg",
+            "capacity_profile.svg",
             "holdings.csv",
             "period_returns.csv",
         ]

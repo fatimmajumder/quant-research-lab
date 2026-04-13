@@ -43,6 +43,11 @@ def public_resources() -> list[dict[str, str]]:
     return service.list_public_resources()
 
 
+@app.get("/api/platform")
+def platform() -> dict[str, object]:
+    return service.platform()
+
+
 @app.get("/api/workspaces")
 def workspaces() -> list[dict[str, object]]:
     return service.list_workspaces()

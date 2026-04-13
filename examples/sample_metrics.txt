@@ -1,3 +1,7 @@
-Quality + Value Sector Neutral: return=0.0572, sharpe=0.843, drawdown=-0.0517, alpha=0.1115
-Momentum with Regime Overlay: return=0.0263, sharpe=0.511, drawdown=-0.0405, alpha=0.0807
-Defensive Quality / Low Vol: return=0.0568, sharpe=1.058, drawdown=-0.0325, alpha=0.1103
+# Quant Research Lab Sample Metrics
+
+- Earnings Revision + Quality: sharpe=1.18, return=6.26%, readiness=77.2, validation=warn
+- Defensive Quality / Low Vol: sharpe=1.06, return=5.68%, readiness=75.3, validation=warn
+- Quality + Value Sector Neutral: sharpe=0.84, return=5.72%, readiness=68.6, validation=warn
+- Momentum with Regime Overlay: sharpe=0.51, return=2.63%, readiness=60.0, validation=pass
+- Liquidity Resilience Barbell: sharpe=-0.11, return=-0.67%, readiness=37.8, validation=warn

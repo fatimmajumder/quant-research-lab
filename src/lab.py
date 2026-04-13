@@ -37,6 +37,28 @@ SCENARIOS = {
         portfolio_style="risk_scaled",
         sector_neutral=True,
     ),
+    "earnings_revision_quality": ScenarioConfig(
+        scenario_id="earnings_revision_quality",
+        name="Earnings Revision + Quality",
+        description="Research sleeve that blends revision-like momentum proxies with quality and profitability controls.",
+        score_column="earnings_revision_score",
+        top_n=10,
+        holding_period=21,
+        cost_bps=14.0,
+        portfolio_style="risk_scaled",
+        sector_neutral=True,
+    ),
+    "liquidity_resilience_barbell": ScenarioConfig(
+        scenario_id="liquidity_resilience_barbell",
+        name="Liquidity Resilience Barbell",
+        description="Barbell sleeve balancing resilient quality names against stressed-but-cheap opportunities with liquidity guards.",
+        score_column="liquidity_resilience_score",
+        top_n=8,
+        holding_period=15,
+        cost_bps=18.0,
+        portfolio_style="risk_scaled",
+        sector_neutral=True,
+    ),
 }
 
 
@@ -60,3 +82,18 @@ def list_scenarios() -> list[dict[str, object]]:
 def run_lab_scenario(scenario_id: str, seed: int = 21) -> dict[str, object]:
     scenario = SCENARIOS[scenario_id]
     return run_backtest(scenario, seed=seed)
+
+
+def get_scenario_config(scenario_id: str) -> dict[str, object]:
+    scenario = SCENARIOS[scenario_id]
+    return {
+        "scenario_id": scenario.scenario_id,
+        "name": scenario.name,
+        "description": scenario.description,
+        "score_column": scenario.score_column,
+        "top_n": scenario.top_n,
+        "holding_period": scenario.holding_period,
+        "cost_bps": scenario.cost_bps,
+        "portfolio_style": scenario.portfolio_style,
+        "sector_neutral": scenario.sector_neutral,
+    }

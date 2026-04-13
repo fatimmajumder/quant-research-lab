@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from io import BytesIO
+from io import StringIO
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -229,7 +230,13 @@ def download_public_dataset(dataset_id: str, output_dir: str | Path) -> dict[str
     else:
         response = requests.get(dataset.source_url, timeout=30)
         response.raise_for_status()
-        frame = pd.read_csv(BytesIO(response.content))
+        if response.content[:2] == b"PK":
+            with ZipFile(BytesIO(response.content)) as archive:
+                csv_name = next(name for name in archive.namelist() if name.endswith(".csv"))
+                csv_text = archive.read(csv_name).decode("utf-8", errors="replace")
+            frame = pd.read_csv(StringIO(csv_text))
+        else:
+            frame = pd.read_csv(StringIO(response.text))
         first_column = frame.columns[0]
         frame = frame.rename(columns={first_column: "date"})
         frame["date"] = pd.to_datetime(frame["date"])

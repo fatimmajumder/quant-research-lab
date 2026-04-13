@@ -1,0 +1,71 @@
+{
+  "platform_name": "Quant Research Platform",
+  "components": [
+    {
+      "name": "point_in_time_ingestion",
+      "layer": "data",
+      "role": "Builds leakage-aware snapshots with dataset versioning and reproducible calendars.",
+      "status": "active"
+    },
+    {
+      "name": "factor_library",
+      "layer": "research",
+      "role": "Computes cross-sectional scores, regime overlays, and signal diagnostics.",
+      "status": "active"
+    },
+    {
+      "name": "portfolio_constructor",
+      "layer": "research",
+      "role": "Forms long-short books with sector controls, turnover smoothing, and cost modeling.",
+      "status": "active"
+    },
+    {
+      "name": "experiment_tracker",
+      "layer": "platform",
+      "role": "Persists runs, artifacts, labels, workspaces, and replay lineage for auditability.",
+      "status": "active"
+    },
+    {
+      "name": "validation_suite",
+      "layer": "risk",
+      "role": "Applies public-facing risk gates for drawdown, turnover, beta, and sector concentration.",
+      "status": "active"
+    },
+    {
+      "name": "tearsheet_service",
+      "layer": "product",
+      "role": "Exports charts, markdown, attribution tables, and downloadable run bundles.",
+      "status": "active"
+    }
+  ],
+  "engineering_signals": [
+    "Point-in-time research contracts and reproducible experiment lineage",
+    "Workspace-oriented experiment tracking and replayable tearsheet bundles",
+    "Exposure control, attribution, and validation gates baked into every run",
+    "CI-ready repo surface with scripts, smoke tests, and deploy-friendly app packaging"
+  ],
+  "validation_gates": [
+    "turnover_budget",
+    "drawdown_budget",
+    "beta_neutrality",
+    "sector_tilt_cap",
+    "signal_quality",
+    "hit_rate_floor"
+  ],
+  "artifact_bundle": [
+    "report.json",
+    "summary.md",
+    "research_brief.md",
+    "lineage.json",
+    "validation_report.json",
+    "platform_summary.json",
+    "factor_attribution.csv",
+    "sector_attribution.csv",
+    "equity_curve.svg",
+    "drawdown.svg",
+    "factor_exposures.svg",
+    "sector_tilts.svg",
+    "ic_trace.svg",
+    "capacity_profile.svg"
+  ]
+}

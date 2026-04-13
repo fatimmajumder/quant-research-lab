@@ -6,10 +6,14 @@ from typing import Any
 from uuid import uuid4
 
 from app.repository import JsonRepository
+from src.attribution import build_attribution
 from src.artifacts import write_artifacts
 from src.data import get_public_datasets
-from src.lab import list_scenarios, run_lab_scenario
+from src.lab import get_scenario_config, list_scenarios, run_lab_scenario
+from src.lineage import build_lineage_record
+from src.platform import build_platform_summary, get_research_platform
 from src.resources import list_public_resources
+from src.validation import build_validation_report
 
 
 class QuantResearchService:
@@ -19,12 +23,15 @@ class QuantResearchService:
         self.repository = JsonRepository(base_dir)
 
     def system_status(self) -> dict[str, Any]:
+        platform = get_research_platform()
         return {
             "status": "ok",
             "runtime": self.runtime,
             "scenario_count": len(list_scenarios()),
             "dataset_count": len(get_public_datasets()),
             "workspace_count": len(self.repository.list_workspaces()),
+            "platform_component_count": len(platform["components"]),
+            "validation_gate_count": len(platform["validation_gates"]),
         }
 
     def list_scenarios(self) -> list[dict[str, Any]]:
@@ -42,6 +49,9 @@ class QuantResearchService:
 
     def list_public_resources(self) -> list[dict[str, str]]:
         return list_public_resources()
+
+    def platform(self) -> dict[str, Any]:
+        return get_research_platform()
 
     def list_workspaces(self) -> list[dict[str, Any]]:
         return self.repository.list_workspaces()
@@ -73,6 +83,7 @@ class QuantResearchService:
             "featured_run": featured,
             "scenarios": self.list_scenarios(),
             "public_resources": self.list_public_resources(),
+            "platform": self.platform(),
         }
 
     def run_research(self, scenario_id: str, seed: int, workspace_id: str | None, label: str | None, dataset_id: str) -> dict[str, Any]:
@@ -94,6 +105,34 @@ class QuantResearchService:
 
         try:
             report = run_lab_scenario(scenario_id, seed=seed)
+            scenario = get_scenario_config(scenario_id)
+            validation_report = build_validation_report(
+                report["summary"],
+                report["factor_exposures"],
+                report["holdings"],
+                report["period_returns"],
+            )
+            attribution = build_attribution(
+                report["period_returns"],
+                report["factor_exposures"],
+                report["holdings"],
+            )
+            lineage = build_lineage_record(
+                scenario=scenario,
+                dataset_id=dataset_id,
+                seed=seed,
+                summary=report["summary"],
+            )
+            platform_summary = build_platform_summary(
+                report["summary"],
+                lineage=lineage,
+                validation_report=validation_report,
+                attribution=attribution,
+            )
+            report["validation_report"] = validation_report
+            report["attribution"] = attribution
+            report["lineage"] = lineage
+            report["platform_summary"] = platform_summary
             artifact_dir = self.repository.get_artifact_dir(run_id)
             artifacts = write_artifacts(artifact_dir, report)
             updated = self.repository.update_run(
@@ -106,6 +145,10 @@ class QuantResearchService:
                     "equity_curve": report["equity_curve"].to_dict(orient="records"),
                     "factor_exposures": report["factor_exposures"].to_dict(orient="records"),
                     "holdings": report["holdings"].to_dict(orient="records"),
+                    "validation_report": validation_report,
+                    "attribution": attribution,
+                    "lineage": lineage,
+                    "platform_summary": platform_summary,
                 },
             )
             return updated
@@ -144,6 +187,8 @@ class QuantResearchService:
                     "max_drawdown": summary["max_drawdown"],
                     "alpha_annualized": summary["alpha_annualized"],
                     "average_turnover": summary["average_turnover"],
+                    "research_readiness": run.get("platform_summary", {}).get("research_readiness"),
+                    "fingerprint": run.get("lineage", {}).get("config_fingerprint"),
                 }
             )
         return {"rows": rows}
