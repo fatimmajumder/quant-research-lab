@@ -32,14 +32,30 @@ def main() -> None:
             report["factor_exposures"],
             report["holdings"],
             report["period_returns"],
+            execution_profile=report["execution_profile"],
+            universe_audit=report["universe_audit"],
         )
         attribution = build_attribution(
             report["period_returns"],
             report["factor_exposures"],
             report["holdings"],
         )
-        lineage = build_lineage_record(scenario, "synthetic_us_equities", 21, report["summary"])
-        platform_summary = build_platform_summary(report["summary"], lineage, validation, attribution)
+        lineage = build_lineage_record(
+            scenario,
+            "synthetic_us_equities",
+            21,
+            report["summary"],
+            execution_profile={"average_slippage_bps": report["summary"]["average_slippage_bps"]},
+            universe_audit={"average_universe_attrition": report["summary"]["average_universe_attrition"]},
+        )
+        platform_summary = build_platform_summary(
+            report["summary"],
+            lineage,
+            validation,
+            attribution,
+            execution_profile={"average_slippage_bps": report["summary"]["average_slippage_bps"]},
+            universe_audit={"average_universe_attrition": report["summary"]["average_universe_attrition"]},
+        )
         scoreboard.append(
             {
                 "scenario_id": scenario_id,
@@ -47,6 +63,8 @@ def main() -> None:
                 "annualized_return": report["summary"]["annualized_return"],
                 "sharpe_ratio": report["summary"]["sharpe_ratio"],
                 "max_drawdown": report["summary"]["max_drawdown"],
+                "average_slippage_bps": report["summary"]["average_slippage_bps"],
+                "eligible_universe": report["summary"]["median_eligible_universe"],
                 "research_readiness": platform_summary["research_readiness"],
                 "validation_status": validation["overall_status"],
                 "fingerprint": lineage["config_fingerprint"],
@@ -69,7 +87,8 @@ def main() -> None:
     for row in sorted(scoreboard, key=lambda item: item["sharpe_ratio"], reverse=True):
         metrics_lines.append(
             f"- {row['scenario_name']}: sharpe={row['sharpe_ratio']:.2f}, "
-            f"return={row['annualized_return']:.2%}, readiness={row['research_readiness']:.1f}, "
+            f"return={row['annualized_return']:.2%}, slippage={row['average_slippage_bps']:.2f}bps, "
+            f"eligible_universe={row['eligible_universe']:.0f}, readiness={row['research_readiness']:.1f}, "
             f"validation={row['validation_status']}"
         )
     (EXAMPLES_DIR / "sample_metrics.txt").write_text("\n".join(metrics_lines) + "\n")

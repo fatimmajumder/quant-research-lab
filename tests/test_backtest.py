@@ -13,18 +13,38 @@ def test_research_pipeline_includes_lineage_validation_and_attribution():
         report["factor_exposures"],
         report["holdings"],
         report["period_returns"],
+        execution_profile=report["execution_profile"],
+        universe_audit=report["universe_audit"],
     )
     attribution = build_attribution(
         report["period_returns"],
         report["factor_exposures"],
         report["holdings"],
     )
-    lineage = build_lineage_record(scenario, "synthetic_us_equities", 21, report["summary"])
-    platform_summary = build_platform_summary(report["summary"], lineage, validation, attribution)
+    lineage = build_lineage_record(
+        scenario,
+        "synthetic_us_equities",
+        21,
+        report["summary"],
+        execution_profile={"average_slippage_bps": report["summary"]["average_slippage_bps"]},
+        universe_audit={"average_universe_attrition": report["summary"]["average_universe_attrition"]},
+    )
+    platform_summary = build_platform_summary(
+        report["summary"],
+        lineage,
+        validation,
+        attribution,
+        execution_profile={"average_slippage_bps": report["summary"]["average_slippage_bps"]},
+        universe_audit={"average_universe_attrition": report["summary"]["average_universe_attrition"]},
+    )
 
     assert report["summary"]["period_count"] > 0
     assert report["summary"]["rebalance_count"] > 0
+    assert report["summary"]["average_slippage_bps"] > 0
+    assert report["summary"]["median_eligible_universe"] > 0
     assert "sector" in report["holdings"].columns
+    assert len(report["execution_profile"]) > 0
+    assert len(report["universe_audit"]) > 0
     assert validation["gates"]
     assert attribution["factor_contributions"]
     assert lineage["config_fingerprint"]
@@ -34,5 +54,6 @@ def test_research_pipeline_includes_lineage_validation_and_attribution():
 def test_platform_snapshot_has_expected_components():
     platform = get_research_platform()
 
-    assert len(platform["components"]) >= 5
+    assert len(platform["components"]) >= 7
     assert "turnover_budget" in platform["validation_gates"]
+    assert "slippage_budget_bps" in platform["validation_gates"]

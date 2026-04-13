@@ -4,6 +4,7 @@ const state = {
   workspaces: [],
   runs: [],
   platform: null,
+  researchOps: null,
   selectedRunId: null,
 };
 
@@ -93,9 +94,12 @@ function renderPlatform(platform) {
   document.getElementById("platform-panel").innerHTML = `
     <article class="card">
       <h3>${platform.platform_name}</h3>
-      <p>This repo now shows the platform layer behind the backtests: point-in-time data, experiment lineage, risk gates, and artifact bundles.</p>
+      <p>This repo now shows the platform layer behind the backtests: point-in-time data, universe filtering, execution simulation, experiment lineage, risk gates, and artifact bundles.</p>
       <div class="chip-row">
         ${platform.validation_gates.map((gate) => `<span class="tag">${gate}</span>`).join("")}
+      </div>
+      <div class="chip-row">
+        ${platform.engineering_signals.map((signal) => `<span class="tag">${signal}</span>`).join("")}
       </div>
     </article>
     ${platform.components
@@ -111,6 +115,39 @@ function renderPlatform(platform) {
         `
       )
       .join("")}
+  `;
+}
+
+function renderResearchOps(ops, featuredRun) {
+  document.getElementById("ops-panel").innerHTML = `
+    <article class="card">
+      <h3>Execution diagnostics</h3>
+      <div class="metric-grid">
+        <div class="metric"><span>Avg slippage</span><strong>${formatNum(ops.average_slippage_bps)} bps</strong></div>
+        <div class="metric"><span>Avg fill ratio</span><strong>${formatPct(ops.average_fill_ratio)}</strong></div>
+        <div class="metric"><span>Universe retention</span><strong>${formatPct(ops.average_universe_retention)}</strong></div>
+        <div class="metric"><span>Latest mode</span><strong>${ops.latest_execution_mode || "n/a"}</strong></div>
+      </div>
+      <p>These metrics make the research-ops layer visible instead of hiding tradability assumptions inside the notebook.</p>
+    </article>
+  `;
+
+  if (!featuredRun) {
+    document.getElementById("featured-run-panel").innerHTML = `<div class="detail-empty">Launch a run to feature the strongest sleeve.</div>`;
+    return;
+  }
+  document.getElementById("featured-run-panel").innerHTML = `
+    <article class="card">
+      <h3>${featuredRun.label}</h3>
+      <p>${featuredRun.summary.scenario_name}</p>
+      <div class="metric-grid">
+        <div class="metric"><span>Sharpe</span><strong>${formatNum(featuredRun.summary.sharpe_ratio)}</strong></div>
+        <div class="metric"><span>Readiness</span><strong>${formatNum(featuredRun.platform_summary.research_readiness)}</strong></div>
+        <div class="metric"><span>Slippage</span><strong>${formatNum(featuredRun.summary.average_slippage_bps)} bps</strong></div>
+        <div class="metric"><span>Eligible universe</span><strong>${formatNum(featuredRun.summary.median_eligible_universe)}</strong></div>
+      </div>
+      <p>${featuredRun.platform_summary.operator_notes.join(" ")}</p>
+    </article>
   `;
 }
 
@@ -130,12 +167,13 @@ function renderRuns() {
           <div class="metric-grid">
             <div class="metric"><span>Return</span><strong>${run.summary ? formatPct(run.summary.annualized_return) : "-"}</strong></div>
             <div class="metric"><span>Sharpe</span><strong>${run.summary ? formatNum(run.summary.sharpe_ratio) : "-"}</strong></div>
-            <div class="metric"><span>Drawdown</span><strong>${run.summary ? formatPct(run.summary.max_drawdown) : "-"}</strong></div>
-            <div class="metric"><span>Alpha</span><strong>${run.summary ? formatPct(run.summary.alpha_annualized) : "-"}</strong></div>
-            <div class="metric"><span>Readiness</span><strong>${run.platform_summary ? formatNum(run.platform_summary.research_readiness) : "-"}</strong></div>
-          </div>
-          <div class="run-actions">
-            <button data-run-detail="${run.run_id}">Inspect</button>
+          <div class="metric"><span>Drawdown</span><strong>${run.summary ? formatPct(run.summary.max_drawdown) : "-"}</strong></div>
+          <div class="metric"><span>Alpha</span><strong>${run.summary ? formatPct(run.summary.alpha_annualized) : "-"}</strong></div>
+          <div class="metric"><span>Readiness</span><strong>${run.platform_summary ? formatNum(run.platform_summary.research_readiness) : "-"}</strong></div>
+          <div class="metric"><span>Slippage</span><strong>${run.summary ? `${formatNum(run.summary.average_slippage_bps)} bps` : "-"}</strong></div>
+        </div>
+        <div class="run-actions">
+          <button data-run-detail="${run.run_id}">Inspect</button>
             <button data-run-replay="${run.run_id}">Replay</button>
           </div>
         </article>
@@ -150,6 +188,8 @@ function renderRunDetail(run) {
   const platformSummary = run.platform_summary || { research_readiness: 0, execution_mode: "n/a", tracker: {}, component_health: [] };
   const attribution = run.attribution || { factor_contributions: [], sector_contributions: [], diagnostics: {} };
   const lineage = run.lineage || { config_fingerprint: "n/a", dataset_snapshot: { dataset_version: "n/a" } };
+  const executionDiagnostics = validation.execution_diagnostics || {};
+  const universeDiagnostics = validation.universe_diagnostics || {};
   document.getElementById("detail-label").textContent = run.label;
   document.getElementById("run-detail").innerHTML = `
     <div class="metric-grid">
@@ -159,6 +199,8 @@ function renderRunDetail(run) {
       <div class="metric"><span>Average turnover</span><strong>${formatNum(run.summary.average_turnover)}</strong></div>
       <div class="metric"><span>Research readiness</span><strong>${formatNum(platformSummary.research_readiness)}</strong></div>
       <div class="metric"><span>Execution mode</span><strong>${platformSummary.execution_mode}</strong></div>
+      <div class="metric"><span>Avg slippage</span><strong>${formatNum(run.summary.average_slippage_bps)} bps</strong></div>
+      <div class="metric"><span>Fill ratio</span><strong>${formatPct(run.summary.average_fill_ratio)}</strong></div>
     </div>
     <p><strong>Scenario:</strong> ${run.summary.scenario_name}</p>
     <p><strong>Periods:</strong> ${run.summary.period_count}</p>
@@ -170,6 +212,7 @@ function renderRunDetail(run) {
       <span class="status-chip">Validation: ${validation.overall_status}</span>
       <span class="status-chip">Rebalances: ${run.summary.rebalance_count}</span>
       <span class="status-chip">Capacity proxy: ${formatNum(run.summary.median_capacity_proxy)}</span>
+      <span class="status-chip">Universe retention: ${formatPct(1 - run.summary.average_universe_attrition)}</span>
     </div>
     <div class="split-list">
       <div class="mini-list">
@@ -193,6 +236,13 @@ function renderRunDetail(run) {
             )
             .join("")}
         </div>
+        <div class="mini-card">
+          <h4>Research ops</h4>
+          <p><strong>Avg participation</strong>: ${formatPct(executionDiagnostics.average_participation_rate || 0)}</p>
+          <p><strong>Avg slippage</strong>: ${formatNum(executionDiagnostics.average_slippage_bps || 0)} bps</p>
+          <p><strong>Avg fill ratio</strong>: ${formatPct(executionDiagnostics.average_fill_ratio || 0)}</p>
+          <p><strong>Universe retention</strong>: ${formatPct(universeDiagnostics.average_retention_ratio || 0)}</p>
+        </div>
       </div>
     </div>
   `;
@@ -200,7 +250,7 @@ function renderRunDetail(run) {
   const artifacts = Object.entries(run.artifacts || {});
   const preview = artifacts
     .filter(([name]) => name.endsWith(".svg"))
-    .slice(0, 3)
+    .slice(0, 4)
     .map(([name]) => `<img src="/api/artifacts/${run.run_id}/${name}" alt="${name}" />`)
     .join("");
   const artifactLinks = artifacts
@@ -228,6 +278,8 @@ function renderComparison(rows) {
           <th>Drawdown</th>
           <th>Alpha</th>
           <th>Turnover</th>
+          <th>Slippage</th>
+          <th>Fill Ratio</th>
           <th>Readiness</th>
           <th>Fingerprint</th>
         </tr>
@@ -245,6 +297,8 @@ function renderComparison(rows) {
           <td>${formatPct(row.max_drawdown)}</td>
           <td>${formatPct(row.alpha_annualized)}</td>
           <td>${formatNum(row.average_turnover)}</td>
+          <td>${row.average_slippage_bps ? `${formatNum(row.average_slippage_bps)} bps` : "-"}</td>
+          <td>${row.average_fill_ratio ? formatPct(row.average_fill_ratio) : "-"}</td>
           <td>${row.research_readiness ? formatNum(row.research_readiness) : "-"}</td>
           <td><code>${row.fingerprint || "-"}</code></td>
         </tr>
@@ -270,6 +324,7 @@ async function loadOverview() {
   state.workspaces = workspaces;
   state.runs = runs;
   state.platform = platform;
+  state.researchOps = overview.research_ops;
 
   renderSystemCard(system);
   renderScenarioOptions();
@@ -277,6 +332,7 @@ async function loadOverview() {
   renderWorkspaces();
   renderResources(overview.public_resources);
   renderPlatform(platform);
+  renderResearchOps(overview.research_ops, overview.featured_run);
   renderRuns();
 
   if (runs.length) {

@@ -1,7 +1,7 @@
 # Quant Research Lab Sample Metrics
 
-- Earnings Revision + Quality: sharpe=1.18, return=6.26%, readiness=77.2, validation=warn
-- Defensive Quality / Low Vol: sharpe=1.06, return=5.68%, readiness=75.3, validation=warn
-- Quality + Value Sector Neutral: sharpe=0.84, return=5.72%, readiness=68.6, validation=warn
-- Momentum with Regime Overlay: sharpe=0.51, return=2.63%, readiness=60.0, validation=pass
-- Liquidity Resilience Barbell: sharpe=-0.11, return=-0.67%, readiness=37.8, validation=warn
+- Earnings Revision + Quality: sharpe=1.60, return=7.90%, slippage=5.46bps, eligible_universe=30, readiness=82.6, validation=pass
+- Momentum with Regime Overlay: sharpe=0.75, return=2.98%, slippage=5.48bps, eligible_universe=30, readiness=64.6, validation=pass
+- Defensive Quality / Low Vol: sharpe=0.71, return=2.96%, slippage=5.46bps, eligible_universe=30, readiness=64.7, validation=pass
+- Quality + Value Sector Neutral: sharpe=-0.03, return=-0.15%, slippage=5.49bps, eligible_universe=30, readiness=46.1, validation=pass
+- Liquidity Resilience Barbell: sharpe=-1.01, return=-4.58%, slippage=5.48bps, eligible_universe=30, readiness=37.5, validation=warn

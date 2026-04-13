@@ -20,6 +20,18 @@
       "status": "active"
     },
     {
+      "name": "universe_filter_engine",
+      "layer": "research",
+      "role": "Applies tradability, liquidity, and volatility screens while recording retention and attrition diagnostics.",
+      "status": "active"
+    },
+    {
+      "name": "execution_simulator",
+      "layer": "risk",
+      "role": "Estimates ADV participation, fill ratios, and implementation shortfall before a sleeve is considered promotable.",
+      "status": "active"
+    },
+    {
       "name": "experiment_tracker",
       "layer": "platform",
       "role": "Persists runs, artifacts, labels, workspaces, and replay lineage for auditability.",
@@ -42,6 +54,7 @@
     "Point-in-time research contracts and reproducible experiment lineage",
     "Workspace-oriented experiment tracking and replayable tearsheet bundles",
     "Exposure control, attribution, and validation gates baked into every run",
+    "Universe filtering and execution simulation visible in artifacts instead of hidden inside a notebook",
     "CI-ready repo surface with scripts, smoke tests, and deploy-friendly app packaging"
   ],
   "validation_gates": [
@@ -50,7 +63,11 @@
     "beta_neutrality",
     "sector_tilt_cap",
     "signal_quality",
-    "hit_rate_floor"
+    "hit_rate_floor",
+    "participation_budget",
+    "slippage_budget_bps",
+    "fill_ratio_floor",
+    "universe_retention_floor"
   ],
   "artifact_bundle": [
     "report.json",
@@ -59,6 +76,8 @@
     "lineage.json",
     "validation_report.json",
     "platform_summary.json",
+    "universe_audit.json",
+    "execution_summary.json",
     "factor_attribution.csv",
     "sector_attribution.csv",
     "equity_curve.svg",
@@ -66,6 +85,10 @@
     "factor_exposures.svg",
     "sector_tilts.svg",
     "ic_trace.svg",
-    "capacity_profile.svg"
+    "capacity_profile.svg",
+    "execution_profile.csv",
+    "universe_audit.csv",
+    "slippage_profile.svg",
+    "universe_retention.svg"
   ]
 }

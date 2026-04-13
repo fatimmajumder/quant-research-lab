@@ -48,6 +48,11 @@ def platform() -> dict[str, object]:
     return service.platform()
 
 
+@app.get("/api/research-ops")
+def research_ops() -> dict[str, object]:
+    return service.research_ops()
+
+
 @app.get("/api/workspaces")
 def workspaces() -> list[dict[str, object]]:
     return service.list_workspaces()

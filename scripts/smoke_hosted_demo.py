@@ -33,6 +33,8 @@ def main() -> None:
     assert system["scenario_count"] >= 5
     platform = requests.get(f"{base_url}/api/platform", timeout=10).json()
     assert len(platform["components"]) >= 5
+    research_ops = requests.get(f"{base_url}/api/research-ops", timeout=10).json()
+    assert "average_slippage_bps" in research_ops
 
     workspace = requests.post(
         f"{base_url}/api/workspaces",
@@ -48,11 +50,12 @@ def main() -> None:
             "label": "Smoke Run",
             "seed": 21,
         },
-        timeout=20,
+        timeout=60,
     ).json()
     completed = wait_for_run(base_url, run["run_id"])
     assert completed["platform_summary"]["research_readiness"] >= 0
     assert completed["validation_report"]["gates"]
+    assert completed["summary"]["average_slippage_bps"] > 0
     assert completed["lineage"]["config_fingerprint"]
 
     replay = requests.post(f"{base_url}/api/runs/{run['run_id']}/replay", timeout=20).json()
@@ -65,6 +68,8 @@ def main() -> None:
     assert len(comparison["rows"]) == 2
     report = requests.get(f"{base_url}/api/artifacts/{run['run_id']}/report.json", timeout=10)
     assert report.status_code == 200
+    slippage = requests.get(f"{base_url}/api/artifacts/{run['run_id']}/slippage_profile.svg", timeout=10)
+    assert slippage.status_code == 200
     print("smoke test passed")
 
 

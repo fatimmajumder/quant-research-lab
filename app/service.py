@@ -53,6 +53,34 @@ class QuantResearchService:
     def platform(self) -> dict[str, Any]:
         return get_research_platform()
 
+    def research_ops(self) -> dict[str, Any]:
+        runs = self.list_runs()
+        completed = [run for run in runs if run.get("status") == "completed" and run.get("summary")]
+        if completed:
+            average_slippage_bps = sum(
+                float(run["summary"].get("average_slippage_bps", 0.0)) for run in completed
+            ) / len(completed)
+            average_fill_ratio = sum(
+                float(run["summary"].get("average_fill_ratio", 1.0)) for run in completed
+            ) / len(completed)
+            average_retention = sum(
+                1.0 - float(run["summary"].get("average_universe_attrition", 0.0))
+                for run in completed
+            ) / len(completed)
+        else:
+            average_slippage_bps = 0.0
+            average_fill_ratio = 1.0
+            average_retention = 0.0
+
+        latest = completed[0] if completed else None
+        return {
+            "average_slippage_bps": round(average_slippage_bps, 4),
+            "average_fill_ratio": round(average_fill_ratio, 4),
+            "average_universe_retention": round(average_retention, 4),
+            "latest_run_id": latest["run_id"] if latest else None,
+            "latest_execution_mode": latest.get("platform_summary", {}).get("execution_mode") if latest else None,
+        }
+
     def list_workspaces(self) -> list[dict[str, Any]]:
         return self.repository.list_workspaces()
 
@@ -84,6 +112,7 @@ class QuantResearchService:
             "scenarios": self.list_scenarios(),
             "public_resources": self.list_public_resources(),
             "platform": self.platform(),
+            "research_ops": self.research_ops(),
         }
 
     def run_research(self, scenario_id: str, seed: int, workspace_id: str | None, label: str | None, dataset_id: str) -> dict[str, Any]:
@@ -111,6 +140,8 @@ class QuantResearchService:
                 report["factor_exposures"],
                 report["holdings"],
                 report["period_returns"],
+                execution_profile=report["execution_profile"],
+                universe_audit=report["universe_audit"],
             )
             attribution = build_attribution(
                 report["period_returns"],
@@ -122,12 +153,26 @@ class QuantResearchService:
                 dataset_id=dataset_id,
                 seed=seed,
                 summary=report["summary"],
+                execution_profile={
+                    "average_slippage_bps": report["summary"]["average_slippage_bps"],
+                    "average_fill_ratio": report["summary"]["average_fill_ratio"],
+                },
+                universe_audit={
+                    "median_eligible_universe": report["summary"]["median_eligible_universe"],
+                    "average_universe_attrition": report["summary"]["average_universe_attrition"],
+                },
             )
             platform_summary = build_platform_summary(
                 report["summary"],
                 lineage=lineage,
                 validation_report=validation_report,
                 attribution=attribution,
+                execution_profile={
+                    "average_slippage_bps": report["summary"]["average_slippage_bps"],
+                },
+                universe_audit={
+                    "average_universe_attrition": report["summary"]["average_universe_attrition"],
+                },
             )
             report["validation_report"] = validation_report
             report["attribution"] = attribution
@@ -145,6 +190,8 @@ class QuantResearchService:
                     "equity_curve": report["equity_curve"].to_dict(orient="records"),
                     "factor_exposures": report["factor_exposures"].to_dict(orient="records"),
                     "holdings": report["holdings"].to_dict(orient="records"),
+                    "execution_profile": report["execution_profile"].to_dict(orient="records"),
+                    "universe_audit": report["universe_audit"].to_dict(orient="records"),
                     "validation_report": validation_report,
                     "attribution": attribution,
                     "lineage": lineage,
@@ -187,6 +234,9 @@ class QuantResearchService:
                     "max_drawdown": summary["max_drawdown"],
                     "alpha_annualized": summary["alpha_annualized"],
                     "average_turnover": summary["average_turnover"],
+                    "average_slippage_bps": summary.get("average_slippage_bps"),
+                    "average_fill_ratio": summary.get("average_fill_ratio"),
+                    "median_eligible_universe": summary.get("median_eligible_universe"),
                     "research_readiness": run.get("platform_summary", {}).get("research_readiness"),
                     "fingerprint": run.get("lineage", {}).get("config_fingerprint"),
                 }

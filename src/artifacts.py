@@ -90,6 +90,8 @@ def write_artifacts(output_dir: str | Path, report: dict[str, object]) -> dict[s
     validation_report = report["validation_report"]
     lineage = report["lineage"]
     platform_summary = report["platform_summary"]
+    execution_profile = report["execution_profile"]
+    universe_audit = report["universe_audit"]
 
     report_path = path / "report.json"
     report_payload = {
@@ -103,6 +105,8 @@ def write_artifacts(output_dir: str | Path, report: dict[str, object]) -> dict[s
         "equity_curve": equity_curve.to_dict(orient="records"),
         "factor_exposures": factor_exposures.to_dict(orient="records"),
         "holdings": holdings.to_dict(orient="records"),
+        "execution_profile": execution_profile.to_dict(orient="records"),
+        "universe_audit": universe_audit.to_dict(orient="records"),
     }
     report_path.write_text(json.dumps(report_payload, indent=2, default=str))
 
@@ -132,6 +136,9 @@ def write_artifacts(output_dir: str | Path, report: dict[str, object]) -> dict[s
                 f"- Config fingerprint: `{lineage['config_fingerprint']}`",
                 f"- Dataset snapshot: `{lineage['dataset_snapshot']['dataset_version']}`",
                 f"- Dominant factor: {attribution['factor_contributions'][0]['factor'] if attribution['factor_contributions'] else 'n/a'}",
+                f"- Average slippage: {summary['average_slippage_bps']:.2f} bps",
+                f"- Average fill ratio: {summary['average_fill_ratio']:.2%}",
+                f"- Median eligible universe: {summary['median_eligible_universe']:.0f} names",
                 "",
                 "## Validation gates",
                 *[
@@ -154,6 +161,12 @@ def write_artifacts(output_dir: str | Path, report: dict[str, object]) -> dict[s
     (path / "capacity_profile.svg").write_text(
         _line_chart_svg(periods, ["turnover", "capacity_proxy"], "Turnover vs Capacity Proxy")
     )
+    (path / "slippage_profile.svg").write_text(
+        _line_chart_svg(periods, ["average_slippage_bps", "average_participation_rate"], "Execution Slippage vs Participation")
+    )
+    (path / "universe_retention.svg").write_text(
+        _line_chart_svg(universe_audit, ["retention_ratio", "attrition_ratio"], "Universe Retention and Attrition")
+    )
 
     latest_tilts = (
         holdings.loc[holdings["ticker"].str.startswith("Sector::")]
@@ -169,9 +182,33 @@ def write_artifacts(output_dir: str | Path, report: dict[str, object]) -> dict[s
     periods.to_csv(path / "period_returns.csv", index=False)
     pd.DataFrame(attribution["factor_contributions"]).to_csv(path / "factor_attribution.csv", index=False)
     pd.DataFrame(attribution["sector_contributions"]).to_csv(path / "sector_attribution.csv", index=False)
+    execution_profile.to_csv(path / "execution_profile.csv", index=False)
+    universe_audit.to_csv(path / "universe_audit.csv", index=False)
     (path / "lineage.json").write_text(json.dumps(lineage, indent=2))
     (path / "validation_report.json").write_text(json.dumps(validation_report, indent=2))
     (path / "platform_summary.json").write_text(json.dumps(platform_summary, indent=2))
+    (path / "execution_summary.json").write_text(
+        json.dumps(
+            {
+                "average_participation_rate": summary["average_participation_rate"],
+                "average_slippage_bps": summary["average_slippage_bps"],
+                "average_fill_ratio": summary["average_fill_ratio"],
+                "average_execution_shortfall": summary["average_execution_shortfall"],
+            },
+            indent=2,
+        )
+    )
+    (path / "universe_audit.json").write_text(
+        json.dumps(
+            {
+                "median_eligible_universe": summary["median_eligible_universe"],
+                "average_universe_attrition": summary["average_universe_attrition"],
+                "dates": universe_audit.to_dict(orient="records"),
+            },
+            indent=2,
+            default=str,
+        )
+    )
 
     manifest = {
         "files": [
@@ -181,6 +218,8 @@ def write_artifacts(output_dir: str | Path, report: dict[str, object]) -> dict[s
             "lineage.json",
             "validation_report.json",
             "platform_summary.json",
+            "universe_audit.json",
+            "execution_summary.json",
             "factor_attribution.csv",
             "sector_attribution.csv",
             "equity_curve.svg",
@@ -189,6 +228,10 @@ def write_artifacts(output_dir: str | Path, report: dict[str, object]) -> dict[s
             "sector_tilts.svg",
             "ic_trace.svg",
             "capacity_profile.svg",
+            "slippage_profile.svg",
+            "universe_retention.svg",
+            "execution_profile.csv",
+            "universe_audit.csv",
             "holdings.csv",
             "period_returns.csv",
         ]

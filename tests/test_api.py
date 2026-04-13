@@ -47,11 +47,17 @@ def test_api_platform_runs_and_compare(tmp_path: Path):
     assert run.status_code == 200
     payload = run.json()
     assert payload["validation_report"]["gates"]
+    assert payload["validation_report"]["execution_diagnostics"]["average_slippage_bps"] > 0
     assert payload["platform_summary"]["research_readiness"] >= 0
     assert payload["lineage"]["config_fingerprint"]
+    assert payload["summary"]["median_eligible_universe"] > 0
 
     artifact = client.get(f"/api/artifacts/{payload['run_id']}/report.json")
     assert artifact.status_code == 200
+
+    research_ops = client.get("/api/research-ops")
+    assert research_ops.status_code == 200
+    assert research_ops.json()["average_slippage_bps"] >= 0
 
     replay = client.post(f"/api/runs/{payload['run_id']}/replay")
     assert replay.status_code == 200

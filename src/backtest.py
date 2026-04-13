@@ -6,8 +6,10 @@ import numpy as np
 import pandas as pd
 
 from src.data import build_synthetic_market_panel
+from src.execution import simulate_execution
 from src.factors import compute_factor_signals
 from src.portfolio import PortfolioConfig, compute_turnover, construct_portfolio_weights
+from src.universe import apply_universe_filters
 
 
 @dataclass(frozen=True)
@@ -40,6 +42,8 @@ def run_backtest(config: ScenarioConfig, seed: int = 21) -> dict[str, object]:
     holdings_rows: list[dict[str, object]] = []
     period_rows: list[dict[str, object]] = []
     exposure_rows: list[dict[str, object]] = []
+    execution_rows: list[dict[str, object]] = []
+    universe_audit_rows: list[dict[str, object]] = []
     previous_weights = pd.Series(dtype=float)
     portfolio_config = PortfolioConfig(
         score_column=config.score_column,
@@ -55,20 +59,33 @@ def run_backtest(config: ScenarioConfig, seed: int = 21) -> dict[str, object]:
         current_forward = forward_returns.loc[current_date]
         snapshot["forward_return"] = snapshot["ticker"].map(current_forward.to_dict())
         snapshot = snapshot.dropna(subset=["forward_return", "volatility_21"])
-        if len(snapshot) < config.top_n * 2:
+        eligible_snapshot, universe_audit = apply_universe_filters(
+            snapshot,
+            score_column=config.score_column,
+        )
+        universe_audit_rows.append({"date": current_date, **universe_audit})
+        if len(eligible_snapshot) < config.top_n * 2:
             continue
 
-        weights = construct_portfolio_weights(snapshot, portfolio_config, previous_weights)
+        weights = construct_portfolio_weights(eligible_snapshot, portfolio_config, previous_weights)
         realized = float(
-            snapshot["ticker"].map(weights.to_dict()).fillna(0.0).to_numpy() @ snapshot["forward_return"].to_numpy()
+            eligible_snapshot["ticker"].map(weights.to_dict()).fillna(0.0).to_numpy()
+            @ eligible_snapshot["forward_return"].to_numpy()
         )
         benchmark_return = float(benchmark.loc[current_date])
         turnover = compute_turnover(weights, previous_weights)
         transaction_cost = turnover * config.cost_bps / 10_000.0
-        net_return = realized - transaction_cost
-        ic = float(snapshot[config.score_column].rank().corr(snapshot["forward_return"].rank()))
-        weighted_snapshot = snapshot.assign(weight=snapshot["ticker"].map(weights).fillna(0.0))
+        ic = float(
+            eligible_snapshot[config.score_column].rank().corr(
+                eligible_snapshot["forward_return"].rank()
+            )
+        )
+        weighted_snapshot = eligible_snapshot.assign(weight=eligible_snapshot["ticker"].map(weights).fillna(0.0))
         selected = weighted_snapshot.loc[weighted_snapshot["weight"] != 0.0].copy()
+        execution_frame, execution_summary = simulate_execution(selected, date=current_date)
+        execution_rows.extend(execution_frame.to_dict(orient="records"))
+        execution_shortfall = float(execution_summary["implementation_shortfall_return"])
+        net_return = realized - transaction_cost - execution_shortfall
         gross_exposure = float(weights.abs().sum())
         net_exposure = float(weights.sum())
         capacity_proxy = float((selected["weight"].abs() * selected["dollar_volume"]).sum()) if not selected.empty else 0.0
@@ -77,15 +94,27 @@ def run_backtest(config: ScenarioConfig, seed: int = 21) -> dict[str, object]:
         exposure_rows.append(
             {
                 "date": current_date,
-                "value": float((snapshot["ticker"].map(weights).fillna(0.0) * snapshot["book_to_price_z"]).sum()),
-                "quality": float((snapshot["ticker"].map(weights).fillna(0.0) * snapshot["quality_z"]).sum()),
-                "momentum": float((snapshot["ticker"].map(weights).fillna(0.0) * snapshot["momentum_63_z"]).sum()),
-                "stability": float((snapshot["ticker"].map(weights).fillna(0.0) * snapshot["stability_z"]).sum()),
-                "beta": float((snapshot["ticker"].map(weights).fillna(0.0) * snapshot["beta_z"]).sum()),
+                "value": float(
+                    (eligible_snapshot["ticker"].map(weights).fillna(0.0) * eligible_snapshot["book_to_price_z"]).sum()
+                ),
+                "quality": float(
+                    (eligible_snapshot["ticker"].map(weights).fillna(0.0) * eligible_snapshot["quality_z"]).sum()
+                ),
+                "momentum": float(
+                    (eligible_snapshot["ticker"].map(weights).fillna(0.0) * eligible_snapshot["momentum_63_z"]).sum()
+                ),
+                "stability": float(
+                    (eligible_snapshot["ticker"].map(weights).fillna(0.0) * eligible_snapshot["stability_z"]).sum()
+                ),
+                "beta": float((eligible_snapshot["ticker"].map(weights).fillna(0.0) * eligible_snapshot["beta_z"]).sum()),
             }
         )
 
-        sector_tilts = snapshot.assign(weight=snapshot["ticker"].map(weights).fillna(0.0)).groupby("sector")["weight"].sum()
+        sector_tilts = (
+            eligible_snapshot.assign(weight=eligible_snapshot["ticker"].map(weights).fillna(0.0))
+            .groupby("sector")["weight"]
+            .sum()
+        )
         for sector, weight in sector_tilts.items():
             holdings_rows.append(
                 {
@@ -122,11 +151,18 @@ def run_backtest(config: ScenarioConfig, seed: int = 21) -> dict[str, object]:
                 "turnover": turnover,
                 "information_coefficient": ic,
                 "transaction_cost": transaction_cost,
+                "execution_shortfall": execution_shortfall,
                 "gross_exposure": gross_exposure,
                 "net_exposure": net_exposure,
                 "capacity_proxy": capacity_proxy,
                 "max_name_weight": max_name_weight,
+                "average_participation_rate": execution_summary["average_participation_rate"],
+                "average_slippage_bps": execution_summary["average_slippage_bps"],
+                "average_fill_ratio": execution_summary["average_fill_ratio"],
+                "stressed_trade_count": execution_summary["stressed_trade_count"],
                 "universe_size": int(len(snapshot)),
+                "eligible_universe": int(universe_audit["eligible_universe"]),
+                "universe_attrition": float(universe_audit["attrition_ratio"]),
             }
         )
         previous_weights = weights
@@ -134,6 +170,8 @@ def run_backtest(config: ScenarioConfig, seed: int = 21) -> dict[str, object]:
     periods = pd.DataFrame(period_rows)
     exposures = pd.DataFrame(exposure_rows)
     holdings = pd.DataFrame(holdings_rows)
+    execution_profile = pd.DataFrame(execution_rows)
+    universe_audit_frame = pd.DataFrame(universe_audit_rows)
     if periods.empty:
         raise RuntimeError("Backtest did not produce any periods.")
 
@@ -164,10 +202,16 @@ def run_backtest(config: ScenarioConfig, seed: int = 21) -> dict[str, object]:
         "benchmark_ending_equity": float(benchmark_curve.iloc[-1]),
         "rebalance_count": int(len(periods)),
         "average_transaction_cost": float(periods["transaction_cost"].mean()),
+        "average_execution_shortfall": float(periods["execution_shortfall"].mean()),
         "average_gross_exposure": float(periods["gross_exposure"].mean()),
         "average_net_exposure": float(periods["net_exposure"].mean()),
         "median_capacity_proxy": float(periods["capacity_proxy"].median()),
         "max_name_weight": float(periods["max_name_weight"].max()),
+        "average_participation_rate": float(periods["average_participation_rate"].mean()),
+        "average_slippage_bps": float(periods["average_slippage_bps"].mean()),
+        "average_fill_ratio": float(periods["average_fill_ratio"].mean()),
+        "average_universe_attrition": float(periods["universe_attrition"].mean()),
+        "median_eligible_universe": float(periods["eligible_universe"].median()),
     }
 
     return {
@@ -183,5 +227,7 @@ def run_backtest(config: ScenarioConfig, seed: int = 21) -> dict[str, object]:
         ),
         "factor_exposures": exposures,
         "holdings": holdings,
+        "execution_profile": execution_profile,
+        "universe_audit": universe_audit_frame,
         "macro": macro,
     }

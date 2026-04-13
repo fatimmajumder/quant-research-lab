@@ -2,31 +2,37 @@
   "summary": {
     "scenario_id": "earnings_revision_quality",
     "scenario_name": "Earnings Revision + Quality",
-    "annualized_return": 0.06264645638386201,
-    "annualized_volatility": 0.05309885312363508,
-    "sharpe_ratio": 1.1798080880955442,
-    "max_drawdown": -0.027383613942484897,
-    "hit_rate": 0.5714285714285714,
-    "alpha_annualized": 0.1157675710622087,
-    "alpha_information_ratio": 1.1130218263641327,
-    "average_turnover": 0.33668145402304867,
-    "average_information_coefficient": 0.09027045468643384,
+    "annualized_return": 0.07900642702884975,
+    "annualized_volatility": 0.04938535052367653,
+    "sharpe_ratio": 1.5997948013140488,
+    "max_drawdown": -0.02816628312275482,
+    "hit_rate": 0.6428571428571429,
+    "alpha_annualized": 0.13094446030874646,
+    "alpha_information_ratio": 1.2697665431675806,
+    "average_turnover": 0.30581962290924725,
+    "average_information_coefficient": 0.15458422675370076,
     "period_count": 14,
-    "ending_equity": 1.0734626330667274,
+    "ending_equity": 1.0927681708561734,
     "benchmark_ending_equity": 0.9346315637492016,
     "rebalance_count": 14,
-    "average_transaction_cost": 0.0004713540356322681,
+    "average_transaction_cost": 0.00042814747207294614,
+    "average_execution_shortfall": 0.0005511428571428571,
     "average_gross_exposure": 1.0,
-    "average_net_exposure": 8.549708560171407e-18,
-    "median_capacity_proxy": 34619288.3074511,
-    "max_name_weight": 0.06376686929690238
+    "average_net_exposure": 0.0015072078479927257,
+    "median_capacity_proxy": 45016941.23912105,
+    "max_name_weight": 0.06585367083687091,
+    "average_participation_rate": 0.009553142857142857,
+    "average_slippage_bps": 5.458092857142857,
+    "average_fill_ratio": 1.0,
+    "average_universe_attrition": 0.36607142857142855,
+    "median_eligible_universe": 30.0
   },
   "validation_report": {
-    "overall_status": "warn",
+    "overall_status": "pass",
     "gates": [
       {
         "name": "turnover_budget",
-        "actual": 0.336681,
+        "actual": 0.30582,
         "threshold": 0.65,
         "comparator": "le",
         "status": "pass",
@@ -34,7 +40,7 @@
       },
       {
         "name": "drawdown_budget",
-        "actual": 0.027384,
+        "actual": 0.028166,
         "threshold": 0.25,
         "comparator": "le",
         "status": "pass",
@@ -42,15 +48,15 @@
       },
       {
         "name": "beta_neutrality",
-        "actual": 0.357594,
+        "actual": 0.298596,
         "threshold": 0.35,
         "comparator": "le",
-        "status": "warn",
+        "status": "pass",
         "detail": "Average beta exposure should stay contained for market-neutral research sleeves."
       },
       {
         "name": "sector_tilt_cap",
-        "actual": 0.050803,
+        "actual": 0.046561,
         "threshold": 0.22,
         "comparator": "le",
         "status": "pass",
@@ -58,7 +64,7 @@
       },
       {
         "name": "signal_quality",
-        "actual": 0.09027,
+        "actual": 0.154584,
         "threshold": 0.015,
         "comparator": "ge",
         "status": "pass",
@@ -66,106 +72,147 @@
       },
       {
         "name": "hit_rate_floor",
-        "actual": 0.571429,
+        "actual": 0.642857,
         "threshold": 0.48,
         "comparator": "ge",
         "status": "pass",
         "detail": "Hit rate should remain above a naive coin-flip baseline after costs."
+      },
+      {
+        "name": "participation_budget",
+        "actual": 0.009553,
+        "threshold": 0.14,
+        "comparator": "le",
+        "status": "pass",
+        "detail": "Average ADV participation should stay inside a realistic public-demo execution budget."
+      },
+      {
+        "name": "slippage_budget_bps",
+        "actual": 5.458093,
+        "threshold": 18.0,
+        "comparator": "le",
+        "status": "pass",
+        "detail": "Estimated slippage should remain low enough for live review."
+      },
+      {
+        "name": "fill_ratio_floor",
+        "actual": 1.0,
+        "threshold": 0.9,
+        "comparator": "ge",
+        "status": "pass",
+        "detail": "Average fill ratio should stay high enough for a deployable sleeve."
+      },
+      {
+        "name": "universe_retention_floor",
+        "actual": 0.633929,
+        "threshold": 0.4,
+        "comparator": "ge",
+        "status": "pass",
+        "detail": "Universe filtering should retain enough names to avoid overfitting to a tiny tradable subset."
       }
     ],
     "notes": [
       "Validation runs are tracked alongside artifacts so analysts can explain why a sleeve is promotable.",
       "These gates are intentionally simple public-facing proxies for a larger internal risk and leakage suite."
     ],
-    "period_count": 14
+    "period_count": 14,
+    "execution_diagnostics": {
+      "average_participation_rate": 0.009553,
+      "average_slippage_bps": 5.4581,
+      "average_fill_ratio": 1.0
+    },
+    "universe_diagnostics": {
+      "average_retention_ratio": 0.6339,
+      "average_eligible_universe": 30.0
+    }
   },
   "attribution": {
     "factor_contributions": [
       {
         "factor": "quality",
-        "contribution": 0.13153766518455728,
-        "mean_exposure": 0.8994524397011449
-      },
-      {
-        "factor": "momentum",
-        "contribution": 0.09120971652983616,
-        "mean_exposure": 0.5891122085320895
+        "contribution": 0.06966784428447145,
+        "mean_exposure": 0.5127547612677831
       },
       {
         "factor": "beta",
-        "contribution": -0.08216605029119045,
-        "mean_exposure": -0.35759414820265883
+        "contribution": -0.050903014828372874,
+        "mean_exposure": -0.29859628912632263
       },
       {
         "factor": "stability",
-        "contribution": -0.029882861318752292,
-        "mean_exposure": -0.07947785070068585
+        "contribution": -0.05010845600245034,
+        "mean_exposure": -0.11367235239608087
+      },
+      {
+        "factor": "momentum",
+        "contribution": 0.048056251163689175,
+        "mean_exposure": 0.44499451628173586
       },
       {
         "factor": "value",
-        "contribution": 0.015170743021776109,
-        "mean_exposure": 0.003543088284312807
+        "contribution": -0.00429424823401009,
+        "mean_exposure": -0.1553051863869472
       }
     ],
     "sector_contributions": [
       {
         "sector": "Technology",
-        "contribution": 0.034526666852003084,
-        "average_weight": 0.004820475554665407,
-        "positions": 65
+        "contribution": 0.037150709624175215,
+        "average_weight": -0.0029838946484854138,
+        "positions": 57
       },
       {
         "sector": "Energy",
-        "contribution": 0.01842191762405061,
-        "average_weight": 0.0010159541657376444,
-        "positions": 68
-      },
-      {
-        "sector": "Materials",
-        "contribution": 0.01304702783077811,
-        "average_weight": -0.0017529222637255998,
-        "positions": 67
-      },
-      {
-        "sector": "Industrials",
-        "contribution": 0.010528999499932294,
-        "average_weight": -0.00038887701335275286,
-        "positions": 54
-      },
-      {
-        "sector": "Consumer",
-        "contribution": 0.005881061034346073,
-        "average_weight": -0.002417252761936296,
-        "positions": 78
-      },
-      {
-        "sector": "Financials",
-        "contribution": 0.0019022338971147676,
-        "average_weight": -0.0024470278047760796,
-        "positions": 60
+        "contribution": 0.030348908037444385,
+        "average_weight": 0.003985278553504498,
+        "positions": 39
       },
       {
         "sector": "Utilities",
-        "contribution": -4.388645153044946e-06,
-        "average_weight": 0.002484816940578522,
-        "positions": 73
+        "contribution": 0.021099786285125304,
+        "average_weight": -0.003711820710850158,
+        "positions": 65
+      },
+      {
+        "sector": "Materials",
+        "contribution": 0.020473921528561513,
+        "average_weight": 0.00483006583475514,
+        "positions": 77
+      },
+      {
+        "sector": "Consumer",
+        "contribution": 0.0102163816003716,
+        "average_weight": -0.003187872072468497,
+        "positions": 32
+      },
+      {
+        "sector": "Financials",
+        "contribution": -0.003048531070526436,
+        "average_weight": 0.0021200612755279155,
+        "positions": 35
+      },
+      {
+        "sector": "Industrials",
+        "contribution": -0.004796611973381659,
+        "average_weight": -0.0014304288063728182,
+        "positions": 25
       },
       {
         "sector": "Healthcare",
-        "contribution": -0.00499186408647211,
-        "average_weight": -0.0013234543658438753,
-        "positions": 68
+        "contribution": -0.0073154311273733,
+        "average_weight": -0.0006391673466767071,
+        "positions": 49
       }
     ],
     "diagnostics": {
-      "mean_information_coefficient": 0.09027045468643384,
-      "mean_turnover": 0.33668145402304867,
-      "best_alpha_period": 0.06326269930355412,
-      "worst_alpha_period": -0.052742366618712816
+      "mean_information_coefficient": 0.15458422675370076,
+      "mean_turnover": 0.30581962290924725,
+      "best_alpha_period": 0.07371054513068567,
+      "worst_alpha_period": -0.03574340376571103
     }
   },
   "lineage": {
-    "config_fingerprint": "ab6d6e7d4b60",
+    "config_fingerprint": "e70b5b5d1ee0",
     "config": {
       "scenario_id": "earnings_revision_quality",
       "score_column": "earnings_revision_score",
@@ -190,62 +237,93 @@
       "signal_family": "earnings_revision_score"
     },
     "execution_model": {
-      "transaction_cost_model": "turnover_linear_bps",
+      "transaction_cost_model": "turnover_linear_bps_plus_execution_shortfall",
       "portfolio_constructor": "risk_scaled",
-      "benchmark": "equal_weight_universe_mean"
+      "benchmark": "equal_weight_universe_mean",
+      "execution_engine_version": "execution-sim-v2",
+      "average_slippage_bps": 5.4581,
+      "average_fill_ratio": 1.0
+    },
+    "universe_model": {
+      "universe_filter_version": "universe-filter-v2",
+      "minimum_price": 8.0,
+      "market_cap_quantile": 0.25,
+      "dollar_volume_quantile": 0.3,
+      "volatility_quantile": 0.92,
+      "median_eligible_universe": 30.0,
+      "average_retention_ratio": 0.6339
     },
     "validation_contract": [
       "No future returns available at rebalance time",
       "Factor scores winsorized and z-scored cross-sectionally",
       "Turnover, drawdown, beta, and sector-tilt gates recorded per run",
-      "Artifacts and summary metrics persisted for replay and audit"
+      "Artifacts and summary metrics persisted for replay and audit",
+      "Universe filter decisions and execution diagnostics persisted for review"
     ],
-    "artifacts_version": "tearsheet-v2"
+    "artifacts_version": "tearsheet-v3"
   },
   "platform_summary": {
-    "research_readiness": 77.23,
-    "execution_mode": "watchlist_iteration",
+    "research_readiness": 82.62,
+    "execution_mode": "promotable_research",
     "tracker": {
-      "lineage_fingerprint": "ab6d6e7d4b60",
+      "lineage_fingerprint": "e70b5b5d1ee0",
       "dataset_version": "synthetic_us_equities-snapshot-v1",
-      "artifacts_version": "tearsheet-v2"
+      "artifacts_version": "tearsheet-v3"
+    },
+    "ops_summary": {
+      "average_slippage_bps": 5.4581,
+      "average_fill_ratio": 1.0,
+      "median_eligible_universe": 30.0,
+      "average_universe_attrition": 0.3661
     },
     "component_health": [
       {
         "name": "point_in_time_ingestion",
-        "status": "monitor",
+        "status": "active",
         "detail": "Builds leakage-aware snapshots with dataset versioning and reproducible calendars."
       },
       {
         "name": "factor_library",
-        "status": "monitor",
+        "status": "active",
         "detail": "Computes cross-sectional scores, regime overlays, and signal diagnostics."
       },
       {
         "name": "portfolio_constructor",
-        "status": "monitor",
+        "status": "active",
         "detail": "Forms long-short books with sector controls, turnover smoothing, and cost modeling."
       },
       {
+        "name": "universe_filter_engine",
+        "status": "active",
+        "detail": "Applies tradability, liquidity, and volatility screens while recording retention and attrition diagnostics."
+      },
+      {
+        "name": "execution_simulator",
+        "status": "active",
+        "detail": "Estimates ADV participation, fill ratios, and implementation shortfall before a sleeve is considered promotable."
+      },
+      {
         "name": "experiment_tracker",
-        "status": "monitor",
+        "status": "active",
         "detail": "Persists runs, artifacts, labels, workspaces, and replay lineage for auditability."
       },
       {
         "name": "validation_suite",
-        "status": "monitor",
+        "status": "active",
         "detail": "Applies public-facing risk gates for drawdown, turnover, beta, and sector concentration."
       },
       {
         "name": "tearsheet_service",
-        "status": "monitor",
+        "status": "active",
         "detail": "Exports charts, markdown, attribution tables, and downloadable run bundles."
       }
     ],
     "operator_notes": [
       "Dominant attribution driver: quality",
-      "Validation status: warn",
-      "Scenario periods evaluated: 14"
+      "Validation status: pass",
+      "Scenario periods evaluated: 14",
+      "Average slippage: 5.46 bps",
+      "Universe retention: 63.4%"
     ]
   },
   "platform": {
@@ -266,7 +344,19 @@
       {
         "name": "portfolio_constructor",
         "layer": "research",
-        "role": "Forms long-short books with sector controls, turnover smoothing, and cost modeling.",
+        "role": "Forms long-short books with sector controls, turnover smoothing, and cost modeling."
+        ,"status": "active"
+      },
+      {
+        "name": "universe_filter_engine",
+        "layer": "research",
+        "role": "Applies tradability, liquidity, and volatility screens while recording retention and attrition diagnostics.",
+        "status": "active"
+      },
+      {
+        "name": "execution_simulator",
+        "layer": "risk",
+        "role": "Estimates ADV participation, fill ratios, and implementation shortfall before a sleeve is considered promotable.",
         "status": "active"
       },
       {
@@ -292,6 +382,7 @@
       "Point-in-time research contracts and reproducible experiment lineage",
       "Workspace-oriented experiment tracking and replayable tearsheet bundles",
       "Exposure control, attribution, and validation gates baked into every run",
+      "Universe filtering and execution simulation visible in artifacts instead of hidden inside a notebook",
       "CI-ready repo surface with scripts, smoke tests, and deploy-friendly app packaging"
     ],
     "validation_gates": [
@@ -300,7 +391,11 @@
       "beta_neutrality",
       "sector_tilt_cap",
       "signal_quality",
-      "hit_rate_floor"
+      "hit_rate_floor",
+      "participation_budget",
+      "slippage_budget_bps",
+      "fill_ratio_floor",
+      "universe_retention_floor"
     ],
     "artifact_bundle": [
       "report.json",
@@ -309,6 +404,8 @@
       "lineage.json",
       "validation_report.json",
       "platform_summary.json",
+      "universe_audit.json",
+      "execution_summary.json",
       "factor_attribution.csv",
       "sector_attribution.csv",
       "equity_curve.svg",
@@ -316,59 +413,73 @@
       "factor_exposures.svg",
       "sector_tilts.svg",
       "ic_trace.svg",
-      "capacity_profile.svg"
+      "capacity_profile.svg",
+      "execution_profile.csv",
+      "universe_audit.csv",
+      "slippage_profile.svg",
+      "universe_retention.svg"
     ]
   },
   "scoreboard": [
     {
       "scenario_id": "quality_value_sector_neutral",
       "scenario_name": "Quality + Value Sector Neutral",
-      "annualized_return": 0.05719181690014197,
-      "sharpe_ratio": 0.8426703356064049,
-      "max_drawdown": -0.05170076419418013,
-      "research_readiness": 68.6,
-      "validation_status": "warn",
-      "fingerprint": "ab0fe139e907"
+      "annualized_return": -0.001527136876488755,
+      "sharpe_ratio": -0.028972092371366907,
+      "max_drawdown": -0.06507423360615427,
+      "average_slippage_bps": 5.494935714285715,
+      "eligible_universe": 30.0,
+      "research_readiness": 46.08,
+      "validation_status": "pass",
+      "fingerprint": "3bde1b23fecb"
     },
     {
       "scenario_id": "momentum_regime_overlay",
       "scenario_name": "Momentum with Regime Overlay",
-      "annualized_return": 0.026283369765385922,
-      "sharpe_ratio": 0.5114582662954259,
-      "max_drawdown": -0.040512597273553386,
-      "research_readiness": 60.03,
+      "annualized_return": 0.029768163484927168,
+      "sharpe_ratio": 0.7466658049830581,
+      "max_drawdown": -0.029012366482379037,
+      "average_slippage_bps": 5.482942857142857,
+      "eligible_universe": 30.0,
+      "research_readiness": 64.59,
       "validation_status": "pass",
-      "fingerprint": "8b829679a397"
+      "fingerprint": "138f963c575b"
     },
     {
       "scenario_id": "defensive_quality_low_vol",
       "scenario_name": "Defensive Quality / Low Vol",
-      "annualized_return": 0.05681283015321248,
-      "sharpe_ratio": 1.0578853038954175,
-      "max_drawdown": -0.03247653361982494,
-      "research_readiness": 75.27,
-      "validation_status": "warn",
-      "fingerprint": "62897796bfa7"
+      "annualized_return": 0.029609512669106275,
+      "sharpe_ratio": 0.7080052281737685,
+      "max_drawdown": -0.036979250709779476,
+      "average_slippage_bps": 5.461878571428571,
+      "eligible_universe": 30.0,
+      "research_readiness": 64.74,
+      "validation_status": "pass",
+      "fingerprint": "4ba5ae3c36b2"
     },
     {
       "scenario_id": "earnings_revision_quality",
       "scenario_name": "Earnings Revision + Quality",
-      "annualized_return": 0.06264645638386201,
-      "sharpe_ratio": 1.1798080880955442,
-      "max_drawdown": -0.027383613942484897,
-      "research_readiness": 77.23,
-      "validation_status": "warn",
-      "fingerprint": "ab6d6e7d4b60"
+      "annualized_return": 0.07900642702884975,
+      "sharpe_ratio": 1.5997948013140488,
+      "max_drawdown": -0.02816628312275482,
+      "average_slippage_bps": 5.458092857142857,
+      "eligible_universe": 30.0,
+      "research_readiness": 82.62,
+      "validation_status": "pass",
+      "fingerprint": "e70b5b5d1ee0"
     },
     {
       "scenario_id": "liquidity_resilience_barbell",
       "scenario_name": "Liquidity Resilience Barbell",
-      "annualized_return": -0.006734115525173889,
-      "sharpe_ratio": -0.11001558542618822,
-      "max_drawdown": -0.0835381580605119,
-      "research_readiness": 37.78,
+      "annualized_return": -0.04579074585765153,
+      "sharpe_ratio": -1.014514481752543,
+      "max_drawdown": -0.05706390478973844,
+      "average_slippage_bps": 5.480235,
+      "eligible_universe": 30.0,
+      "research_readiness": 37.51,
       "validation_status": "warn",
-      "fingerprint": "d8bef65d86e5"
+      "fingerprint": "e99e5481dd91"
     }
   ]
 }
